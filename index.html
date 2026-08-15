@@ -41,13 +41,17 @@
   <!-- Balance -->
   <div class="bg-white px-4 py-5 shadow-sm sticky top-0 z-10">
     <div class="flex justify-between items-center mb-1">
-      <span class="text-sm text-gray-500">Balance de <span x-text="mesActualLabel"></span></span>
       <button @click="logout()" class="text-xs text-gray-400 underline">Salir</button>
     </div>
-    <div class="text-3xl font-bold" :class="balance >= 0 ? 'text-green-600' : 'text-red-600'">
+    <div class="flex items-center justify-center gap-3 mb-1">
+      <button @click="mesAnterior()" class="w-8 h-8 flex items-center justify-center text-gray-400 text-lg">‹</button>
+      <span class="text-sm text-gray-600 font-medium capitalize w-36 text-center" x-text="mesSeleccionadoLabel"></span>
+      <button @click="mesSiguiente()" :disabled="esMesActual" class="w-8 h-8 flex items-center justify-center text-gray-400 text-lg disabled:opacity-20">›</button>
+    </div>
+    <div class="text-3xl font-bold text-center" :class="balance >= 0 ? 'text-green-600' : 'text-red-600'">
       $ <span x-text="formatMonto(balance)"></span>
     </div>
-    <div class="flex gap-4 mt-2 text-sm">
+    <div class="flex gap-4 mt-2 text-sm justify-center">
       <span class="text-green-600">Ingresos: $ <span x-text="formatMonto(totalIngresos)"></span></span>
       <span class="text-red-600">Gastos: $ <span x-text="formatMonto(totalGastos)"></span></span>
     </div>
@@ -99,11 +103,19 @@
     </div>
   </div>
 
-  <!-- Gráfico -->
+  <!-- Gráfico categorías -->
   <div class="px-4 mt-6">
     <div class="bg-white rounded-2xl shadow-sm p-4">
-      <h2 class="text-sm font-semibold text-gray-600 mb-2">Gastos por categoría (mes)</h2>
+      <h2 class="text-sm font-semibold text-gray-600 mb-2">Gastos por categoría</h2>
       <canvas id="chartCategorias" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Gráfico evolución -->
+  <div class="px-4 mt-6">
+    <div class="bg-white rounded-2xl shadow-sm p-4">
+      <h2 class="text-sm font-semibold text-gray-600 mb-2">Evolución (últimos 6 meses)</h2>
+      <canvas id="chartEvolucion" height="220"></canvas>
     </div>
   </div>
 
