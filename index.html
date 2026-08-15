@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Control de Gastos</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  [x-cloak] { display: none !important; }
+  body { -webkit-tap-highlight-color: transparent; }
+</style>
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+
+<!-- ===================== LOGIN ===================== -->
+<div x-data="loginApp()" x-init="init()" x-show="!session" x-cloak
+     class="min-h-screen flex items-center justify-center px-4">
+  <div class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm">
+    <h1 class="text-xl font-bold text-center mb-6 text-gray-800">Control de Gastos</h1>
+    <form @submit.prevent="login()" class="space-y-4">
+      <input type="email" x-model="email" placeholder="Email" required
+        class="w-full h-12 px-4 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <input type="password" x-model="password" placeholder="Contraseña" required
+        class="w-full h-12 px-4 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
+      <button type="submit"
+        class="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold text-base active:bg-blue-700">
+        Ingresar
+      </button>
+      <p x-show="errorMsg" x-text="errorMsg" class="text-red-600 text-sm text-center"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ===================== APP ===================== -->
+<div x-data="gastosApp()" x-init="init()" x-show="session" x-cloak class="max-w-md mx-auto pb-10">
+
+  <!-- Balance -->
+  <div class="bg-white px-4 py-5 shadow-sm sticky top-0 z-10">
+    <div class="flex justify-between items-center mb-1">
+      <span class="text-sm text-gray-500">Balance de <span x-text="mesActualLabel"></span></span>
+      <button @click="logout()" class="text-xs text-gray-400 underline">Salir</button>
+    </div>
+    <div class="text-3xl font-bold" :class="balance >= 0 ? 'text-green-600' : 'text-red-600'">
+      $ <span x-text="formatMonto(balance)"></span>
+    </div>
+    <div class="flex gap-4 mt-2 text-sm">
+      <span class="text-green-600">Ingresos: $ <span x-text="formatMonto(totalIngresos)"></span></span>
+      <span class="text-red-600">Gastos: $ <span x-text="formatMonto(totalGastos)"></span></span>
+    </div>
+  </div>
+
+  <!-- Toggle tipo -->
+  <div class="px-4 mt-4">
+    <div class="grid grid-cols-2 gap-2">
+      <button @click="setTipo('ingreso')"
+        class="h-12 rounded-xl font-semibold text-base transition"
+        :class="tipo === 'ingreso' ? 'bg-green-600 text-white' : 'bg-white text-green-600 border border-green-600'">
+        + Ingreso
+      </button>
+      <button @click="setTipo('gasto')"
+        class="h-12 rounded-xl font-semibold text-base transition"
+        :class="tipo === 'gasto' ? 'bg-red-600 text-white' : 'bg-white text-red-600 border border-red-600'">
+        + Gasto
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulario de carga -->
+  <div class="px-4 mt-4">
+    <div class="bg-white rounded-2xl shadow-sm p-4">
+      <!-- Chips de categoría -->
+      <div class="flex flex-wrap gap-2 mb-3">
+        <template x-for="cat in categoriasActuales" :key="cat">
+          <button @click="categoria = cat"
+            class="px-3 h-9 rounded-full text-sm font-medium border transition"
+            :class="categoria === cat
+              ? (tipo === 'ingreso' ? 'bg-green-600 text-white border-green-600' : 'bg-red-600 text-white border-red-600')
+              : 'bg-gray-50 text-gray-700 border-gray-300'"
+            x-text="cat"></button>
+        </template>
+      </div>
+
+      <input type="text" x-model="detalle" placeholder="Detalle (opcional)"
+        class="w-full h-11 px-4 mb-3 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+      <input type="text" inputmode="decimal" x-model="monto" placeholder="$ 0.00"
+        class="w-full h-14 px-4 mb-3 rounded-xl border border-gray-300 text-2xl font-semibold text-center focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+      <button @click="guardar()" :disabled="!puedeGuardar"
+        class="w-full h-12 rounded-xl font-semibold text-base text-white transition disabled:opacity-40"
+        :class="tipo === 'ingreso' ? 'bg-green-600' : 'bg-red-600'">
+        Guardar
+      </button>
+      <p x-show="errorMsg" x-text="errorMsg" class="text-red-600 text-sm text-center mt-2"></p>
+    </div>
+  </div>
+
+  <!-- Gráfico -->
+  <div class="px-4 mt-6">
+    <div class="bg-white rounded-2xl shadow-sm p-4">
+      <h2 class="text-sm font-semibold text-gray-600 mb-2">Gastos por categoría (mes)</h2>
+      <canvas id="chartCategorias" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Listado -->
+  <div class="px-4 mt-6">
+    <h2 class="text-sm font-semibold text-gray-600 mb-2 px-1">Movimientos</h2>
+    <div class="space-y-2">
+      <template x-for="mov in movimientos" :key="mov.id">
+        <div class="bg-white rounded-xl shadow-sm p-3 flex justify-between items-center">
+          <div class="min-w-0">
+            <div class="font-medium text-gray-800 text-sm truncate" x-text="mov.categoria"></div>
+            <div class="text-xs text-gray-400 truncate" x-text="(mov.detalle || '') + ' · ' + formatFecha(mov.fecha)"></div>
+          </div>
+          <div class="text-right flex items-center gap-2 shrink-0">
+            <span class="font-semibold text-sm" :class="mov.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'">
+              <span x-text="mov.tipo === 'ingreso' ? '+' : '-'"></span>$<span x-text="formatMonto(mov.monto)"></span>
+            </span>
+            <button @click="eliminar(mov.id)" class="text-gray-300 text-lg leading-none">×</button>
+          </div>
+        </div>
+      </template>
+      <p x-show="movimientos.length === 0" class="text-center text-gray-400 text-sm py-6">Sin movimientos este mes</p>
+    </div>
+  </div>
+
+</div>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
