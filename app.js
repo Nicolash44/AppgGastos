@@ -42,7 +42,9 @@ function gastosApp() {
     monto: "",
     movimientos: [],
     errorMsg: "",
-    chart: null,
+    chartCategorias: null,
+    chartEvolucion: null,
+    mesSeleccionado: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
 
     get categoriasActuales() {
       return CATEGORIAS[this.tipo];
@@ -59,8 +61,13 @@ function gastosApp() {
     get balance() {
       return this.totalIngresos - this.totalGastos;
     },
-    get mesActualLabel() {
-      return new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" });
+    get mesSeleccionadoLabel() {
+      return this.mesSeleccionado.toLocaleDateString("es-AR", { month: "long", year: "numeric" });
+    },
+    get esMesActual() {
+      const hoy = new Date();
+      return this.mesSeleccionado.getFullYear() === hoy.getFullYear() &&
+             this.mesSeleccionado.getMonth() === hoy.getMonth();
     },
 
     async init() {
@@ -68,9 +75,9 @@ function gastosApp() {
       this.session = data.session;
       supabaseClient.auth.onAuthStateChange((_event, session) => {
         this.session = session;
-        if (session) this.cargarMovimientos();
+        if (session) this.cargarTodo();
       });
-      if (this.session) this.cargarMovimientos();
+      if (this.session) this.cargarTodo();
       this.setTipo("gasto");
     },
 
@@ -83,22 +90,67 @@ function gastosApp() {
       await supabaseClient.auth.signOut();
     },
 
+    mesAnterior() {
+      this.mesSeleccionado = new Date(this.mesSeleccionado.getFullYear(), this.mesSeleccionado.getMonth() - 1, 1);
+      this.cargarTodo();
+    },
+    mesSiguiente() {
+      if (this.esMesActual) return;
+      this.mesSeleccionado = new Date(this.mesSeleccionado.getFullYear(), this.mesSeleccionado.getMonth() + 1, 1);
+      this.cargarTodo();
+    },
+
+    async cargarTodo() {
+      await this.cargarMovimientos();
+      await this.cargarEvolucion();
+    },
+
     async cargarMovimientos() {
-      const inicioMes = new Date();
-      inicioMes.setDate(1);
-      const inicioStr = inicioMes.toISOString().slice(0, 10);
+      const inicio = this.mesSeleccionado;
+      const fin = new Date(inicio.getFullYear(), inicio.getMonth() + 1, 1);
+      const inicioStr = inicio.toISOString().slice(0, 10);
+      const finStr = fin.toISOString().slice(0, 10);
 
       const { data, error } = await supabaseClient
         .from("transacciones")
         .select("*")
         .gte("fecha", inicioStr)
+        .lt("fecha", finStr)
         .order("fecha", { ascending: false })
         .order("created_at", { ascending: false });
 
       if (!error) {
         this.movimientos = data;
-        this.renderChart();
+        this.renderChartCategorias();
       }
+    },
+
+    async cargarEvolucion() {
+      const inicio = new Date(this.mesSeleccionado.getFullYear(), this.mesSeleccionado.getMonth() - 5, 1);
+      const inicioStr = inicio.toISOString().slice(0, 10);
+
+      const { data, error } = await supabaseClient
+        .from("transacciones")
+        .select("tipo, monto, fecha")
+        .gte("fecha", inicioStr);
+
+      if (error) return;
+
+      const meses = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(this.mesSeleccionado.getFullYear(), this.mesSeleccionado.getMonth() - i, 1);
+        meses.push({ key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`, label: d.toLocaleDateString("es-AR", { month: "short" }), ingresos: 0, gastos: 0 });
+      }
+
+      data.forEach(m => {
+        const key = m.fecha.slice(0, 7);
+        const mes = meses.find(x => x.key === key);
+        if (!mes) return;
+        if (m.tipo === "ingreso") mes.ingresos += Number(m.monto);
+        else mes.gastos += Number(m.monto);
+      });
+
+      this.renderChartEvolucion(meses);
     },
 
     async guardar() {
@@ -120,13 +172,13 @@ function gastosApp() {
       this.categoria = "";
       this.detalle = "";
       this.monto = "";
-      this.cargarMovimientos();
+      this.cargarTodo();
     },
 
     async eliminar(id) {
       if (!confirm("¿Eliminar este movimiento?")) return;
       const { error } = await supabaseClient.from("transacciones").delete().eq("id", id);
-      if (!error) this.cargarMovimientos();
+      if (!error) this.cargarTodo();
     },
 
     formatMonto(n) {
@@ -136,7 +188,7 @@ function gastosApp() {
       return new Date(f + "T00:00:00").toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
     },
 
-    renderChart() {
+    renderChartCategorias() {
       const gastos = this.movimientos.filter(m => m.tipo === "gasto");
       const porCategoria = {};
       gastos.forEach(g => {
@@ -145,9 +197,9 @@ function gastosApp() {
 
       const ctx = document.getElementById("chartCategorias");
       if (!ctx) return;
-      if (this.chart) this.chart.destroy();
+      if (this.chartCategorias) this.chartCategorias.destroy();
 
-      this.chart = new Chart(ctx, {
+      this.chartCategorias = new Chart(ctx, {
         type: "doughnut",
         data: {
           labels: Object.keys(porCategoria),
@@ -162,6 +214,28 @@ function gastosApp() {
         options: {
           responsive: true,
           plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } } }
+        }
+      });
+    },
+
+    renderChartEvolucion(meses) {
+      const ctx = document.getElementById("chartEvolucion");
+      if (!ctx) return;
+      if (this.chartEvolucion) this.chartEvolucion.destroy();
+
+      this.chartEvolucion = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: meses.map(m => m.label),
+          datasets: [
+            { label: "Ingresos", data: meses.map(m => m.ingresos), backgroundColor: "#22c55e", borderRadius: 4 },
+            { label: "Gastos", data: meses.map(m => m.gastos), backgroundColor: "#ef4444", borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } } },
+          scales: { y: { beginAtZero: true } }
         }
       });
     }
