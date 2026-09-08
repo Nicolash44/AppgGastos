@@ -41,7 +41,7 @@ function loginApp() {
 }
 
 // Reemplazá por tu número real con código de país, sin espacios ni signos (ej: 5491122334455)
-const NUMERO_WHATSAPP = "5491100000000";
+const NUMERO_WHATSAPP = "5491135970030";
 
 function gastosApp() {
   return {
