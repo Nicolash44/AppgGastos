@@ -60,10 +60,10 @@
         <li class="flex items-start gap-2"><span class="text-emerald-600 mt-0.5">•</span><span>Soporte 24/7 — respondo prácticamente a cualquier hora</span></li>
       </ul>
 
-      <a href="https://wa.me/5491100000000?text=Hola!%20Quiero%20empezar%20la%20prueba%20gratis%20de%20Ingresos247."
-        class="block w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base text-center leading-[3rem] active:bg-emerald-700">
+      <button @click="irARegistro()"
+        class="block w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base active:bg-emerald-700">
         Empezar prueba gratis
-      </a>
+      </button>
     </div>
 
     <button @click="irALogin()" class="w-full text-center text-sm text-gray-400 underline">
@@ -86,6 +86,40 @@
       </button>
       <p x-show="errorMsg" x-text="errorMsg" class="text-red-600 text-sm text-center"></p>
     </form>
+    <button @click="irARegistro()" class="w-full text-center text-sm text-gray-400 underline mt-4">
+      ¿No tenés cuenta? Empezar prueba gratis
+    </button>
+  </div>
+
+  <!-- Registro -->
+  <div x-show="vista === 'registro'" x-cloak class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm">
+    <button @click="vista = 'landing'" class="text-sm text-gray-400 mb-4">‹ Volver</button>
+    <h1 class="text-xl font-bold text-center mb-1 text-gray-800">Empezar prueba gratis</h1>
+    <p class="text-gray-400 text-sm text-center mb-6">5 días gratis, sin tarjeta. Después, $25.000/mes.</p>
+
+    <template x-if="!infoMsg">
+      <form @submit.prevent="registrarse()" class="space-y-4">
+        <input type="email" x-model="email" placeholder="Email" required
+          class="w-full h-12 px-4 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        <input type="password" x-model="password" placeholder="Contraseña (mín. 6 caracteres)" required
+          class="w-full h-12 px-4 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        <input type="password" x-model="password2" placeholder="Repetir contraseña" required
+          class="w-full h-12 px-4 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
+        <button type="submit"
+          class="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base active:bg-emerald-700">
+          Crear cuenta y empezar
+        </button>
+        <p x-show="errorMsg" x-text="errorMsg" class="text-red-600 text-sm text-center"></p>
+      </form>
+    </template>
+
+    <template x-if="infoMsg">
+      <p class="text-emerald-700 text-sm text-center" x-text="infoMsg"></p>
+    </template>
+
+    <button @click="irALogin()" class="w-full text-center text-sm text-gray-400 underline mt-4">
+      Ya tengo cuenta, ingresar
+    </button>
   </div>
 </div>
 

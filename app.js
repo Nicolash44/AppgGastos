@@ -10,10 +10,12 @@ const CATEGORIAS_DEFAULT = {
 function loginApp() {
   return {
     session: null,
-    vista: "landing", // landing | login
+    vista: "landing", // landing | login | registro
     email: "",
     password: "",
+    password2: "",
     errorMsg: "",
+    infoMsg: "",
 
     async init() {
       const { data } = await supabaseClient.auth.getSession();
@@ -25,6 +27,14 @@ function loginApp() {
 
     irALogin() {
       this.vista = "login";
+      this.errorMsg = "";
+      this.infoMsg = "";
+    },
+
+    irARegistro() {
+      this.vista = "registro";
+      this.errorMsg = "";
+      this.infoMsg = "";
     },
 
     async login() {
@@ -36,12 +46,44 @@ function loginApp() {
       if (error) {
         this.errorMsg = "Email o contraseña incorrectos";
       }
+    },
+
+    async registrarse() {
+      this.errorMsg = "";
+      this.infoMsg = "";
+
+      if (this.password.length < 6) {
+        this.errorMsg = "La contraseña tiene que tener al menos 6 caracteres";
+        return;
+      }
+      if (this.password !== this.password2) {
+        this.errorMsg = "Las contraseñas no coinciden";
+        return;
+      }
+
+      const { data, error } = await supabaseClient.auth.signUp({
+        email: this.email,
+        password: this.password
+      });
+
+      if (error) {
+        this.errorMsg = error.message.includes("already registered") || error.message.includes("already been registered")
+          ? "Ese email ya tiene una cuenta. Probá ingresar."
+          : "No se pudo crear la cuenta. Revisá el email e intentá de nuevo.";
+        return;
+      }
+
+      if (!data.session) {
+        // requiere confirmación por email (SMTP con dominio verificado)
+        this.infoMsg = "Te mandamos un mail para confirmar tu cuenta. Revisalo (y la carpeta de spam) y después volvé a entrar.";
+      }
+      // si data.session existe, onAuthStateChange actualiza this.session solo y arranca la app
     }
   };
 }
 
 // Reemplazá por tu número real con código de país, sin espacios ni signos (ej: 5491122334455)
-const NUMERO_WHATSAPP = "5491135970030";
+const NUMERO_WHATSAPP = "5491100000000";
 
 function gastosApp() {
   return {
