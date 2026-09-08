@@ -63,7 +63,10 @@ function loginApp() {
 
       const { data, error } = await supabaseClient.auth.signUp({
         email: this.email,
-        password: this.password
+        password: this.password,
+        options: {
+          emailRedirectTo: window.location.origin + window.location.pathname
+        }
       });
 
       if (error) {
