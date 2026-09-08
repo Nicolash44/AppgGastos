@@ -1,9 +1,11 @@
 {
-  "name": "Control de Gastos",
-  "short_name": "Gastos",
+  "name": "Ingresos247",
+  "short_name": "Ingresos247",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f3f4f6",
-  "theme_color": "#2563eb",
-  "icons": []
+  "theme_color": "#0F172A",
+  "icons": [
+    { "src": "logo-icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
 }

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>Control de Gastos</title>
+<title>Ingresos247</title>
 <link rel="manifest" href="manifest.json">
 <script src="https://cdn.tailwindcss.com"></script>
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -21,31 +21,54 @@
      class="min-h-screen flex items-center justify-center px-4">
 
   <!-- Landing pública -->
-  <div x-show="vista === 'landing'" x-cloak class="w-full max-w-sm text-center">
-    <div class="bg-white rounded-2xl shadow-md p-8">
-      <h1 class="text-2xl font-bold text-gray-800 mb-2">Control de Gastos</h1>
-      <p class="text-gray-500 text-base mb-6">Un lugar simple para llevar tus ingresos y gastos, mes a mes.</p>
+  <div x-show="vista === 'landing'" x-cloak class="w-full max-w-sm">
 
-      <ul class="text-left text-sm text-gray-600 space-y-2 mb-8">
-        <li class="flex items-start gap-2">
-          <span class="text-blue-600 mt-0.5">•</span>
-          <span>Categorías propias, editables cuando quieras</span>
-        </li>
-        <li class="flex items-start gap-2">
-          <span class="text-blue-600 mt-0.5">•</span>
-          <span>Comparación entre meses, por categoría</span>
-        </li>
-        <li class="flex items-start gap-2">
-          <span class="text-blue-600 mt-0.5">•</span>
-          <span>Gráficos claros de dónde va la plata</span>
-        </li>
+    <!-- Marca -->
+    <div class="flex items-center gap-2 justify-center mb-6">
+      <svg viewBox="0 0 128 128" class="w-9 h-9 rounded-lg">
+        <rect width="128" height="128" rx="28" fill="#0F172A"/>
+        <polygon points="34,24 80,24 80,92 75,84 70,92 65,84 60,92 55,84 50,92 45,84 40,92 34,84" fill="#F8FAFC"/>
+        <rect x="42" y="36" width="30" height="5" rx="2.5" fill="#94A3B8"/>
+        <rect x="42" y="48" width="22" height="5" rx="2.5" fill="#94A3B8"/>
+        <rect x="42" y="60" width="26" height="5" rx="2.5" fill="#10B981"/>
+        <g transform="rotate(38 64 64)">
+          <rect x="88" y="10" width="11" height="46" rx="4" fill="#10B981"/>
+          <polygon points="88,56 99,56 93.5,70" fill="#F8FAFC"/>
+          <rect x="88" y="2" width="11" height="10" rx="3" fill="#34D399"/>
+        </g>
+      </svg>
+      <span class="font-bold text-lg text-gray-900">ingresos<span class="text-emerald-600">247</span></span>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-md p-6 text-center mb-4">
+      <p class="text-gray-600 text-base mb-1">Anotá tus gastos e ingresos del mes.</p>
+      <p class="text-gray-400 text-sm">Cargás cada movimiento en segundos, elegís la categoría, y al toque ves en qué se te va la plata — sin planillas, sin vueltas.</p>
+    </div>
+
+    <!-- Plan único -->
+    <div class="bg-white rounded-2xl shadow-md p-6 mb-4">
+      <div class="flex items-baseline justify-between mb-1">
+        <span class="font-semibold text-gray-800">Acceso completo</span>
+        <span class="text-2xl font-bold text-gray-900">$25.000<span class="text-sm font-normal text-gray-400">/mes</span></span>
+      </div>
+      <p class="text-emerald-600 text-sm font-medium mb-4">5 días de prueba gratis, sin compromiso</p>
+
+      <ul class="text-left text-sm text-gray-600 space-y-2 mb-6">
+        <li class="flex items-start gap-2"><span class="text-emerald-600 mt-0.5">•</span><span>Categorías propias, editables cuando quieras</span></li>
+        <li class="flex items-start gap-2"><span class="text-emerald-600 mt-0.5">•</span><span>Comparación entre meses, por categoría</span></li>
+        <li class="flex items-start gap-2"><span class="text-emerald-600 mt-0.5">•</span><span>Gráficos claros de dónde va la plata</span></li>
+        <li class="flex items-start gap-2"><span class="text-emerald-600 mt-0.5">•</span><span>Soporte 24/7 — respondo prácticamente a cualquier hora</span></li>
       </ul>
 
-      <button @click="irALogin()"
-        class="w-full h-12 rounded-xl bg-blue-600 text-white font-semibold text-base active:bg-blue-700">
-        Ingresar
-      </button>
+      <a href="https://wa.me/5491100000000?text=Hola!%20Quiero%20empezar%20la%20prueba%20gratis%20de%20Ingresos247."
+        class="block w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base text-center leading-[3rem] active:bg-emerald-700">
+        Empezar prueba gratis
+      </a>
     </div>
+
+    <button @click="irALogin()" class="w-full text-center text-sm text-gray-400 underline">
+      Ya tengo cuenta, ingresar
+    </button>
   </div>
 
   <!-- Login -->
@@ -68,6 +91,27 @@
 
 <!-- ===================== APP ===================== -->
 <div x-data="gastosApp()" x-init="init()" x-show="session" x-cloak class="max-w-md md:max-w-5xl mx-auto pb-10">
+
+  <!-- Cuenta bloqueada (prueba vencida sin pago) -->
+  <div x-show="bloqueado" x-cloak class="min-h-screen flex items-center justify-center px-4">
+    <div class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm text-center">
+      <h1 class="text-lg font-bold text-gray-800 mb-2">Tu prueba gratuita terminó</h1>
+      <p class="text-gray-500 text-sm mb-6">Escribime por WhatsApp para activar tu cuenta y seguir usando la app.</p>
+      <a :href="linkWhatsapp" class="block w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base text-center leading-[3rem] active:bg-emerald-700 mb-3">
+        Activar por WhatsApp
+      </a>
+      <button @click="logout()" class="text-sm text-gray-400 underline">Salir</button>
+    </div>
+  </div>
+
+  <!-- Contenido normal de la app -->
+  <div x-show="!bloqueado">
+
+  <!-- Aviso de prueba activa -->
+  <div x-show="diasRestantesTrial !== null" x-cloak class="bg-emerald-50 text-emerald-700 text-sm text-center py-2 px-4">
+    Te quedan <span x-text="diasRestantesTrial"></span> días de prueba gratis ·
+    <a :href="linkWhatsapp" class="underline font-medium">activar ahora</a>
+  </div>
 
   <!-- Balance -->
   <div class="bg-white px-4 py-5 shadow-sm sticky top-0 z-10 md:px-6">
@@ -257,6 +301,9 @@
       <p x-show="movimientos.length === 0" class="text-center text-gray-400 text-sm py-6 md:col-span-2">Sin movimientos este mes</p>
     </div>
   </div>
+
+  </div>
+  <!-- fin contenido normal -->
 
 </div>
 

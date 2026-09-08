@@ -40,9 +40,13 @@ function loginApp() {
   };
 }
 
+// Reemplazá por tu número real con código de país, sin espacios ni signos (ej: 5491122334455)
+const NUMERO_WHATSAPP = "5491100000000";
+
 function gastosApp() {
   return {
     session: null,
+    perfil: null, // { trial_inicio, pagado } | null mientras carga
     tipo: "gasto",
     categoria: "",
     detalle: "",
@@ -96,6 +100,21 @@ function gastosApp() {
       return this.mesSeleccionado.getFullYear() === hoy.getFullYear() &&
              this.mesSeleccionado.getMonth() === hoy.getMonth();
     },
+    get diasRestantesTrial() {
+      if (!this.perfil || this.perfil.pagado) return null;
+      const vence = new Date(this.perfil.trial_inicio);
+      vence.setDate(vence.getDate() + 5);
+      const dias = Math.ceil((vence - new Date()) / (1000 * 60 * 60 * 24));
+      return Math.max(0, dias);
+    },
+    get bloqueado() {
+      if (!this.perfil) return false; // todavía no cargó: no mostrar bloqueo de arranque
+      return !this.perfil.pagado && this.diasRestantesTrial === 0;
+    },
+    get linkWhatsapp() {
+      const msg = encodeURIComponent("Hola! Quiero activar mi cuenta de Ingresos247.");
+      return `https://wa.me/${NUMERO_WHATSAPP}?text=${msg}`;
+    },
 
     async init() {
       const { data } = await supabaseClient.auth.getSession();
@@ -112,6 +131,9 @@ function gastosApp() {
     },
 
     async arrancar() {
+      await this.cargarPerfil();
+      if (this.bloqueado) return; // no cargar nada más si la cuenta está bloqueada
+
       this.mostrarComparacion = !this.esMobile;
       await this.cargarCategorias();
       this.setTipo("gasto");
@@ -135,6 +157,14 @@ function gastosApp() {
 
     async logout() {
       await supabaseClient.auth.signOut();
+    },
+
+    async cargarPerfil() {
+      const { data, error } = await supabaseClient
+        .from("perfiles")
+        .select("trial_inicio, pagado")
+        .single();
+      if (!error) this.perfil = data;
     },
 
     // ==================== CATEGORÍAS ====================
