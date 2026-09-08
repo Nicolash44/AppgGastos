@@ -1,6 +1,8 @@
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const CATEGORIAS = {
+// Se usa una sola vez por usuario nuevo, para poblar su tabla "categorias" en Supabase.
+// Una vez sembradas, cada usuario las administra desde la app (agregar/eliminar).
+const CATEGORIAS_DEFAULT = {
   ingreso: ["Sueldo", "Freelance/Changas", "Otros"],
   gasto: ["Mercado", "Nafta", "Mantenimiento Auto", "Servicios", "Vivienda", "Salud", "Seguro", "Tarjeta de Crédito", "Ocio", "Ropa", "Otros"]
 };
@@ -8,6 +10,7 @@ const CATEGORIAS = {
 function loginApp() {
   return {
     session: null,
+    vista: "landing", // landing | login
     email: "",
     password: "",
     errorMsg: "",
@@ -18,6 +21,10 @@ function loginApp() {
       supabaseClient.auth.onAuthStateChange((_event, session) => {
         this.session = session;
       });
+    },
+
+    irALogin() {
+      this.vista = "login";
     },
 
     async login() {
@@ -44,10 +51,30 @@ function gastosApp() {
     errorMsg: "",
     chartCategorias: null,
     chartEvolucion: null,
+    chartComparacion: null,
     mesSeleccionado: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
 
+    // --- categorías por usuario ---
+    categorias: { ingreso: [], gasto: [] },
+    editandoCategorias: false,
+    nuevaCategoria: "",
+
+    // --- comparativo de meses ---
+    mostrarComparacion: false,
+    compTipo: "gasto",
+    compCategoria: "",
+    compMesA: "",
+    compMesB: "",
+    comparacion: null,
+
+    // --- layout / dispositivo ---
+    esMobile: window.matchMedia("(max-width: 767px)").matches,
+
     get categoriasActuales() {
-      return CATEGORIAS[this.tipo];
+      return this.categorias[this.tipo];
+    },
+    get categoriasCompActuales() {
+      return this.categorias[this.compTipo];
     },
     get puedeGuardar() {
       return this.categoria && this.monto && parseFloat(this.monto) > 0;
@@ -75,10 +102,30 @@ function gastosApp() {
       this.session = data.session;
       supabaseClient.auth.onAuthStateChange((_event, session) => {
         this.session = session;
-        if (session) this.cargarTodo();
+        if (session) this.arrancar();
       });
-      if (this.session) this.cargarTodo();
+      if (this.session) this.arrancar();
+
+      window.matchMedia("(max-width: 767px)").addEventListener("change", (e) => {
+        this.esMobile = e.matches;
+      });
+    },
+
+    async arrancar() {
+      this.mostrarComparacion = !this.esMobile;
+      await this.cargarCategorias();
       this.setTipo("gasto");
+
+      const hoy = new Date();
+      this.compMesA = this.formatMesInput(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+      this.compMesB = this.formatMesInput(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1));
+
+      this.cargarTodo();
+      this.cargarComparacion();
+    },
+
+    formatMesInput(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     },
 
     setTipo(t) {
@@ -89,6 +136,68 @@ function gastosApp() {
     async logout() {
       await supabaseClient.auth.signOut();
     },
+
+    // ==================== CATEGORÍAS ====================
+
+    async cargarCategorias() {
+      const { data, error } = await supabaseClient
+        .from("categorias")
+        .select("*")
+        .order("orden", { ascending: true });
+
+      if (error) return;
+
+      if (!data || data.length === 0) {
+        await this.sembrarCategoriasDefault();
+        return this.cargarCategorias();
+      }
+
+      const agrupadas = { ingreso: [], gasto: [] };
+      data.forEach(c => agrupadas[c.tipo].push(c));
+      this.categorias = agrupadas;
+    },
+
+    async sembrarCategoriasDefault() {
+      const filas = [];
+      let orden = 0;
+      for (const tipo of ["ingreso", "gasto"]) {
+        CATEGORIAS_DEFAULT[tipo].forEach(nombre => {
+          filas.push({ tipo, nombre, orden: orden++ });
+        });
+      }
+      await supabaseClient.from("categorias").insert(filas);
+    },
+
+    toggleEditarCategorias() {
+      this.editandoCategorias = !this.editandoCategorias;
+      this.nuevaCategoria = "";
+    },
+
+    async agregarCategoria() {
+      const nombre = this.nuevaCategoria.trim();
+      if (!nombre) return;
+
+      const yaExiste = this.categorias[this.tipo].some(c => c.nombre.toLowerCase() === nombre.toLowerCase());
+      if (yaExiste) {
+        this.nuevaCategoria = "";
+        return;
+      }
+
+      const orden = this.categorias[this.tipo].length;
+      const { error } = await supabaseClient.from("categorias").insert({ tipo: this.tipo, nombre, orden });
+      if (!error) {
+        this.nuevaCategoria = "";
+        await this.cargarCategorias();
+      }
+    },
+
+    async eliminarCategoria(cat) {
+      if (!confirm(`¿Eliminar la categoría "${cat.nombre}"? Los movimientos ya cargados con esta categoría no se modifican.`)) return;
+      const { error } = await supabaseClient.from("categorias").delete().eq("id", cat.id);
+      if (!error) await this.cargarCategorias();
+    },
+
+    // ==================== MES ACTUAL / MOVIMIENTOS ====================
 
     mesAnterior() {
       this.mesSeleccionado = new Date(this.mesSeleccionado.getFullYear(), this.mesSeleccionado.getMonth() - 1, 1);
@@ -173,12 +282,16 @@ function gastosApp() {
       this.detalle = "";
       this.monto = "";
       this.cargarTodo();
+      this.cargarComparacion();
     },
 
     async eliminar(id) {
       if (!confirm("¿Eliminar este movimiento?")) return;
       const { error } = await supabaseClient.from("transacciones").delete().eq("id", id);
-      if (!error) this.cargarTodo();
+      if (!error) {
+        this.cargarTodo();
+        this.cargarComparacion();
+      }
     },
 
     formatMonto(n) {
@@ -200,7 +313,7 @@ function gastosApp() {
       if (this.chartCategorias) this.chartCategorias.destroy();
 
       this.chartCategorias = new Chart(ctx, {
-        type: "doughnut",
+        type: "pie",
         data: {
           labels: Object.keys(porCategoria),
           datasets: [{
@@ -213,6 +326,7 @@ function gastosApp() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } } }
         }
       });
@@ -234,6 +348,94 @@ function gastosApp() {
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    },
+
+    // ==================== COMPARATIVO DE MESES ====================
+
+    setCompTipo(t) {
+      this.compTipo = t;
+      this.compCategoria = "";
+      this.cargarComparacion();
+    },
+
+    rangoMes(mesInput) {
+      const [año, mes] = mesInput.split("-").map(Number);
+      const inicio = new Date(año, mes - 1, 1);
+      const fin = new Date(año, mes, 1);
+      return { inicio: inicio.toISOString().slice(0, 10), fin: fin.toISOString().slice(0, 10) };
+    },
+
+    agruparPorCategoria(filas) {
+      const out = {};
+      filas.forEach(f => { out[f.categoria] = (out[f.categoria] || 0) + Number(f.monto); });
+      return out;
+    },
+
+    labelMes(mesInput) {
+      if (!mesInput) return "";
+      const [año, mes] = mesInput.split("-").map(Number);
+      return new Date(año, mes - 1, 1).toLocaleDateString("es-AR", { month: "long", year: "numeric" });
+    },
+
+    async cargarComparacion() {
+      if (!this.compMesA || !this.compMesB) return;
+
+      const rangoA = this.rangoMes(this.compMesA);
+      const rangoB = this.rangoMes(this.compMesB);
+
+      let queryA = supabaseClient.from("transacciones").select("categoria, monto")
+        .gte("fecha", rangoA.inicio).lt("fecha", rangoA.fin).eq("tipo", this.compTipo);
+      let queryB = supabaseClient.from("transacciones").select("categoria, monto")
+        .gte("fecha", rangoB.inicio).lt("fecha", rangoB.fin).eq("tipo", this.compTipo);
+
+      if (this.compCategoria) {
+        queryA = queryA.eq("categoria", this.compCategoria);
+        queryB = queryB.eq("categoria", this.compCategoria);
+      }
+
+      const [resA, resB] = await Promise.all([queryA, queryB]);
+      if (resA.error || resB.error) return;
+
+      const totalA = resA.data.reduce((s, m) => s + Number(m.monto), 0);
+      const totalB = resB.data.reduce((s, m) => s + Number(m.monto), 0);
+      const porCategoriaA = this.agruparPorCategoria(resA.data);
+      const porCategoriaB = this.agruparPorCategoria(resB.data);
+      const categorias = [...new Set([...Object.keys(porCategoriaA), ...Object.keys(porCategoriaB)])];
+
+      this.comparacion = {
+        totalA,
+        totalB,
+        diferencia: totalA - totalB,
+        porcentaje: totalB > 0 ? ((totalA - totalB) / totalB) * 100 : null
+      };
+
+      this.renderChartComparacion(categorias, porCategoriaA, porCategoriaB);
+    },
+
+    renderChartComparacion(categorias, porA, porB) {
+      const ctx = document.getElementById("chartComparacion");
+      if (!ctx) return;
+      if (this.chartComparacion) this.chartComparacion.destroy();
+
+      if (categorias.length === 0) return;
+
+      this.chartComparacion = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: categorias,
+          datasets: [
+            { label: this.labelMes(this.compMesA), data: categorias.map(c => porA[c] || 0), backgroundColor: "#3b82f6", borderRadius: 4 },
+            { label: this.labelMes(this.compMesB), data: categorias.map(c => porB[c] || 0), backgroundColor: "#94a3b8", borderRadius: 4 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
           plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } } },
           scales: { y: { beginAtZero: true } }
         }
