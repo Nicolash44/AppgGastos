@@ -18,7 +18,7 @@ Dos públicos por igual, sin un segmento dominante todavía:
 ## Product Purpose
 
 Registrar ingresos y gastos en segundos y mostrar exactamente adónde va cada peso, mes a
-mes. Se vende como servicio mensual ($25.000 ARS/mes, con 5 días de prueba gratis), no
+mes. Se vende como servicio mensual ($16.000 ARS/mes, con 5 días de prueba gratis), no
 como app gratuita de uso ocasional.
 
 ## Positioning
@@ -43,7 +43,7 @@ de gastos requiere trabajo manual repetido cada mes; acá es una vista que ya es
 
 ## Capabilities and Constraints
 
-- Un solo plan, $25.000 ARS/mes, 5 días de prueba gratis al registrarse.
+- Un solo plan, $16.000 ARS/mes, 5 días de prueba gratis al registrarse.
 - Categorías de ingreso/gasto propias y editables por usuario.
 - Gráficos de gasto por categoría, evolución de últimos 6 meses, y comparación entre dos
   meses elegidos (con o sin filtro de categoría).

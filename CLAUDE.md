@@ -1,6 +1,6 @@
 # Ingresos247
 
-App web de control de gastos e ingresos, vendida como servicio mensual ($25.000 ARS/mes,
+App web de control de gastos e ingresos, vendida como servicio mensual ($16.000 ARS/mes,
 con 5 días de prueba gratis). Sitio estático (HTML + Alpine.js + Tailwind vía CDN) sobre
 Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio propio
 `ingresos247.com`.
@@ -22,7 +22,7 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
 
 ## Modelo de negocio y cómo funciona el acceso
 
-- Un solo plan, $25.000/mes, 5 días de prueba gratis al registrarse.
+- Un solo plan, $16.000/mes, 5 días de prueba gratis al registrarse.
 - Pago manual: el cliente transfiere a un alias (`ALIAS_PAGO` en `app.js`) y toca
   "Ya transferí" en la app. Esto llama a la función `solicitar_pago()` en Supabase, que
   guarda `pago_solicitado` en la tabla `perfiles` — **no marca el pago como confirmado
