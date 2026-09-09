@@ -20,6 +20,21 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
   en `supabase/email-templates/` como referencia, pero **el que importa es el que está
   pegado en el dashboard**, este repo no lo despliega solo.
 
+## Autenticación
+
+- Email/contraseña y Google OAuth, ambos vía Supabase Auth (`signInWithPassword`,
+  `signUp`, `signInWithOAuth({ provider: 'google' })` en `app.js`).
+- El botón "Continuar con Google" sirve para login y registro a la vez: si el usuario de
+  Google no existía, Supabase lo crea al vuelo. El trigger `trg_crear_perfil`
+  (`002_trial_bloqueo_rls.sql`) corre igual para cualquier método de alta y le arma el
+  perfil/trial en `perfiles` — no hace falta lógica extra en el frontend para eso.
+- **El login con Google no funciona solo con el código del repo.** Hay que habilitar el
+  proveedor Google en el dashboard de Supabase (Authentication → Providers → Google) con
+  un Client ID/Secret de Google Cloud Console, y agregar ahí la URL de callback que
+  Supabase muestra en esa pantalla como "Authorized redirect URI" en el cliente OAuth de
+  Google Cloud. Sin ese paso manual (no versionado, como el resto de la config de
+  Supabase Auth), el botón tira error.
+
 ## Modelo de negocio y cómo funciona el acceso
 
 - Un solo plan, $16.000/mes, 5 días de prueba gratis al registrarse.

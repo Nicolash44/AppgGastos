@@ -71,6 +71,19 @@ function loginApp() {
       }
     },
 
+    // Sirve tanto para login como para registro: si el usuario de Google no existe
+    // todavía en Supabase Auth, se crea solo (mismo trigger que arma su perfil/trial).
+    async continuarConGoogle() {
+      this.errorMsg = "";
+      const { error } = await supabaseClient.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: window.location.origin + window.location.pathname }
+      });
+      if (error) {
+        this.errorMsg = "No se pudo iniciar con Google. Intentá de nuevo.";
+      }
+    },
+
     async registrarse() {
       this.errorMsg = "";
       this.infoMsg = "";
