@@ -52,8 +52,8 @@ function loginApp() {
       this.errorMsg = "";
       this.infoMsg = "";
 
-      if (this.password.length < 6) {
-        this.errorMsg = "La contraseña tiene que tener al menos 6 caracteres";
+      if (this.password.length < 8) {
+        this.errorMsg = "La contraseña tiene que tener al menos 8 caracteres";
         return;
       }
       if (this.password !== this.password2) {
