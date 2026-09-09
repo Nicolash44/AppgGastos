@@ -130,10 +130,19 @@
   <div x-show="bloqueado" x-cloak class="min-h-screen flex items-center justify-center px-4">
     <div class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm text-center">
       <h1 class="text-lg font-bold text-gray-800 mb-2">Tu prueba gratuita terminó</h1>
-      <p class="text-gray-500 text-sm mb-6">Escribime por WhatsApp para activar tu cuenta y seguir usando la app.</p>
-      <a :href="linkWhatsapp" class="block w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base text-center leading-[3rem] active:bg-emerald-700 mb-3">
-        Activar por WhatsApp
-      </a>
+      <p class="text-gray-500 text-sm mb-2">Para seguir usando la app: transferí $25.000 y avisame acá abajo.</p>
+      <p class="text-gray-400 text-xs mb-6">Alias: <span class="font-medium">INGRESOS247</span></p>
+
+      <template x-if="!perfil.pago_solicitado">
+        <button @click="marcarPagoTransferido()"
+          class="block w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base active:bg-emerald-700 mb-3">
+          Ya transferí
+        </button>
+      </template>
+      <template x-if="perfil.pago_solicitado">
+        <p class="text-emerald-700 text-sm mb-3">Aviso enviado. Te confirmo apenas lo vea.</p>
+      </template>
+
       <button @click="logout()" class="text-sm text-gray-400 underline">Salir</button>
     </div>
   </div>
@@ -144,7 +153,8 @@
   <!-- Aviso de prueba activa -->
   <div x-show="diasRestantesTrial !== null" x-cloak class="bg-emerald-50 text-emerald-700 text-sm text-center py-2 px-4">
     Te quedan <span x-text="diasRestantesTrial"></span> días de prueba gratis ·
-    <a :href="linkWhatsapp" class="underline font-medium">activar ahora</a>
+    <span x-show="!perfil.pago_solicitado"><button @click="marcarPagoTransferido()" class="underline font-medium">ya transferí</button></span>
+    <span x-show="perfil.pago_solicitado" class="font-medium">aviso enviado</span>
   </div>
 
   <!-- Balance -->

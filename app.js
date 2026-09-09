@@ -85,9 +85,6 @@ function loginApp() {
   };
 }
 
-// Reemplazá por tu número real con código de país, sin espacios ni signos (ej: 5491122334455)
-const NUMERO_WHATSAPP = "5491100000000";
-
 function gastosApp() {
   return {
     session: null,
@@ -156,10 +153,6 @@ function gastosApp() {
       if (!this.perfil) return false; // todavía no cargó: no mostrar bloqueo de arranque
       return !this.perfil.pagado && this.diasRestantesTrial === 0;
     },
-    get linkWhatsapp() {
-      const msg = encodeURIComponent("Hola! Quiero activar mi cuenta de Ingresos247.");
-      return `https://wa.me/${NUMERO_WHATSAPP}?text=${msg}`;
-    },
 
     async init() {
       const { data } = await supabaseClient.auth.getSession();
@@ -207,9 +200,16 @@ function gastosApp() {
     async cargarPerfil() {
       const { data, error } = await supabaseClient
         .from("perfiles")
-        .select("trial_inicio, pagado")
+        .select("trial_inicio, pagado, pago_solicitado")
         .single();
       if (!error) this.perfil = data;
+    },
+
+    async marcarPagoTransferido() {
+      const { error } = await supabaseClient.rpc("solicitar_pago");
+      if (!error) {
+        this.perfil = { ...this.perfil, pago_solicitado: new Date().toISOString() };
+      }
     },
 
     // ==================== CATEGORÍAS ====================
