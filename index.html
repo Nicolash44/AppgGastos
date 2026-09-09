@@ -30,7 +30,7 @@
 
 <!-- ===================== LANDING + LOGIN ===================== -->
 <div x-data="loginApp()" x-init="init()" x-show="!session || $store.auth.recuperando" x-cloak
-     class="min-h-screen flex items-center justify-center px-4">
+     class="min-h-screen flex items-center justify-center px-4 py-10">
 
   <!-- Landing pública -->
   <div x-show="vista === 'landing'" x-cloak class="w-full max-w-sm md:max-w-md">
@@ -57,6 +57,13 @@
       <p class="text-slate-500 text-base md:text-lg">Ingresos247 lo carga en segundos y te muestra exactamente adónde va cada peso, mes a mes.</p>
     </div>
 
+    <!-- Vista previa real de la app -->
+    <div class="mb-6">
+      <div class="mx-auto max-w-[240px] rounded-2xl bg-slate-900 p-1.5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.08)]">
+        <img src="preview-dashboard.png" alt="Pantalla principal de Ingresos247 mostrando el balance del mes y un gráfico de gastos por categoría" class="w-full rounded-xl" width="390" height="512" loading="lazy">
+      </div>
+    </div>
+
     <!-- Plan único -->
     <div class="bg-white rounded-2xl shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_rgba(15,23,42,0.08)] overflow-hidden mb-4">
       <div class="h-1 bg-emerald-500"></div>
@@ -65,7 +72,8 @@
           <span class="font-semibold text-slate-800">Acceso completo</span>
           <span class="font-display text-2xl font-bold text-slate-900">$25.000<span class="text-sm font-normal text-slate-400">/mes</span></span>
         </div>
-        <p class="text-emerald-600 text-sm font-medium mb-4">5 días de prueba gratis, sin compromiso</p>
+        <p class="text-slate-400 text-xs mb-2">Menos de $833 por día.</p>
+        <p class="text-emerald-600 text-sm font-medium mb-4">5 días de prueba gratis · sin tarjeta ni cobros automáticos</p>
 
         <ul class="text-left text-sm text-slate-600 space-y-2 mb-6">
           <li class="flex items-start gap-2"><span class="text-emerald-600 mt-0.5">•</span><span>Categorías propias, editables cuando quieras</span></li>
