@@ -126,12 +126,18 @@
 <!-- ===================== APP ===================== -->
 <div x-data="gastosApp()" x-init="init()" x-show="session" x-cloak class="max-w-md md:max-w-5xl mx-auto pb-10">
 
-  <!-- Cuenta bloqueada (prueba vencida sin pago) -->
-  <div x-show="bloqueado" x-cloak class="min-h-screen flex items-center justify-center px-4">
+  <!-- Pantalla de pago: bloqueo total al vencer el trial, o abierta a mano desde el aviso -->
+  <div x-show="bloqueado || mostrarPago" x-cloak class="min-h-screen flex items-center justify-center px-4">
     <div class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm text-center">
-      <h1 class="text-lg font-bold text-gray-800 mb-2">Tu prueba gratuita terminó</h1>
-      <p class="text-gray-500 text-sm mb-2">Para seguir usando la app: transferí $25.000 y avisame acá abajo.</p>
-      <p class="text-gray-400 text-xs mb-6">Alias: <span class="font-medium">INGRESOS247</span></p>
+      <button x-show="!bloqueado" @click="mostrarPago = false" class="text-sm text-gray-400 mb-4">‹ Volver</button>
+
+      <h1 class="text-lg font-bold text-gray-800 mb-2" x-text="bloqueado ? 'Tu prueba gratuita terminó' : 'Activar cuenta'"></h1>
+      <p class="text-gray-500 text-sm mb-4">Transferí $25.000/mes a este alias y avisame acá abajo:</p>
+
+      <div class="bg-gray-50 rounded-xl py-3 px-4 mb-2 flex items-center justify-center gap-2">
+        <span class="font-mono font-semibold text-gray-800" x-text="aliasPago"></span>
+      </div>
+      <button @click="copiarAlias()" class="text-xs text-blue-600 underline mb-6">Copiar alias</button>
 
       <template x-if="!perfil.pago_solicitado">
         <button @click="marcarPagoTransferido()"
@@ -153,7 +159,7 @@
   <!-- Aviso de prueba activa -->
   <div x-show="diasRestantesTrial !== null" x-cloak class="bg-emerald-50 text-emerald-700 text-sm text-center py-2 px-4">
     Te quedan <span x-text="diasRestantesTrial"></span> días de prueba gratis ·
-    <span x-show="!perfil.pago_solicitado"><button @click="marcarPagoTransferido()" class="underline font-medium">ya transferí</button></span>
+    <span x-show="!perfil.pago_solicitado"><button @click="mostrarPago = true" class="underline font-medium">activar ahora</button></span>
     <span x-show="perfil.pago_solicitado" class="font-medium">aviso enviado</span>
   </div>
 

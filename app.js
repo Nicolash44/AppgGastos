@@ -85,10 +85,15 @@ function loginApp() {
   };
 }
 
+// Reemplazá por tu alias real de Mercado Pago (o CBU/CVU) para recibir transferencias
+const ALIAS_PAGO = "ingresos247";
+
 function gastosApp() {
   return {
     session: null,
-    perfil: null, // { trial_inicio, pagado } | null mientras carga
+    perfil: null, // { trial_inicio, pagado, pago_solicitado } | null mientras carga
+    aliasPago: ALIAS_PAGO,
+    mostrarPago: false,
     tipo: "gasto",
     categoria: "",
     detalle: "",
@@ -209,6 +214,14 @@ function gastosApp() {
       const { error } = await supabaseClient.rpc("solicitar_pago");
       if (!error) {
         this.perfil = { ...this.perfil, pago_solicitado: new Date().toISOString() };
+      }
+    },
+
+    async copiarAlias() {
+      try {
+        await navigator.clipboard.writeText(this.aliasPago);
+      } catch (e) {
+        // si el navegador bloquea el clipboard, no rompe nada, el usuario copia a mano
       }
     },
 
