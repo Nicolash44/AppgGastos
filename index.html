@@ -74,7 +74,23 @@
   <!-- Login -->
   <div x-show="vista === 'login'" x-cloak class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm">
     <button @click="vista = 'landing'" class="text-sm text-gray-400 mb-4">‹ Volver</button>
-    <h1 class="text-xl font-bold text-center mb-6 text-gray-800">Control de Gastos</h1>
+    <h1 class="text-xl font-bold text-center mb-6 text-gray-800">
+      <span class="inline-flex items-center gap-1.5 align-middle">
+        <svg viewBox="0 0 128 128" class="w-6 h-6 rounded-md">
+          <rect width="128" height="128" rx="28" fill="#0F172A"/>
+          <polygon points="34,24 80,24 80,92 75,84 70,92 65,84 60,92 55,84 50,92 45,84 40,92 34,84" fill="#F8FAFC"/>
+          <rect x="42" y="36" width="30" height="5" rx="2.5" fill="#94A3B8"/>
+          <rect x="42" y="48" width="22" height="5" rx="2.5" fill="#94A3B8"/>
+          <rect x="42" y="60" width="26" height="5" rx="2.5" fill="#10B981"/>
+          <g transform="rotate(38 64 64)">
+            <rect x="88" y="10" width="11" height="46" rx="4" fill="#10B981"/>
+            <polygon points="88,56 99,56 93.5,70" fill="#F8FAFC"/>
+            <rect x="88" y="2" width="11" height="10" rx="3" fill="#34D399"/>
+          </g>
+        </svg>
+        ingresos<span class="text-emerald-600">247</span>
+      </span>
+    </h1>
     <form @submit.prevent="login()" class="space-y-4">
       <input type="email" x-model="email" placeholder="Email" required
         class="w-full h-12 px-4 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -94,7 +110,23 @@
   <!-- Registro -->
   <div x-show="vista === 'registro'" x-cloak class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm">
     <button @click="vista = 'landing'" class="text-sm text-gray-400 mb-4">‹ Volver</button>
-    <h1 class="text-xl font-bold text-center mb-1 text-gray-800">Empezar prueba gratis</h1>
+    <h1 class="text-xl font-bold text-center mb-1 text-gray-800">
+      <span class="inline-flex items-center gap-1.5 align-middle">
+        <svg viewBox="0 0 128 128" class="w-6 h-6 rounded-md">
+          <rect width="128" height="128" rx="28" fill="#0F172A"/>
+          <polygon points="34,24 80,24 80,92 75,84 70,92 65,84 60,92 55,84 50,92 45,84 40,92 34,84" fill="#F8FAFC"/>
+          <rect x="42" y="36" width="30" height="5" rx="2.5" fill="#94A3B8"/>
+          <rect x="42" y="48" width="22" height="5" rx="2.5" fill="#94A3B8"/>
+          <rect x="42" y="60" width="26" height="5" rx="2.5" fill="#10B981"/>
+          <g transform="rotate(38 64 64)">
+            <rect x="88" y="10" width="11" height="46" rx="4" fill="#10B981"/>
+            <polygon points="88,56 99,56 93.5,70" fill="#F8FAFC"/>
+            <rect x="88" y="2" width="11" height="10" rx="3" fill="#34D399"/>
+          </g>
+        </svg>
+        Empezar prueba gratis
+      </span>
+    </h1>
     <p class="text-gray-400 text-sm text-center mb-6">5 días gratis, sin tarjeta. Después, $25.000/mes.</p>
 
     <template x-if="!infoMsg">
@@ -131,6 +163,20 @@
     <div class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm text-center">
       <button x-show="!bloqueado" @click="mostrarPago = false" class="text-sm text-gray-400 mb-4">‹ Volver</button>
 
+      <div class="flex justify-center mb-3">
+        <svg viewBox="0 0 128 128" class="w-8 h-8 rounded-lg">
+          <rect width="128" height="128" rx="28" fill="#0F172A"/>
+          <polygon points="34,24 80,24 80,92 75,84 70,92 65,84 60,92 55,84 50,92 45,84 40,92 34,84" fill="#F8FAFC"/>
+          <rect x="42" y="36" width="30" height="5" rx="2.5" fill="#94A3B8"/>
+          <rect x="42" y="48" width="22" height="5" rx="2.5" fill="#94A3B8"/>
+          <rect x="42" y="60" width="26" height="5" rx="2.5" fill="#10B981"/>
+          <g transform="rotate(38 64 64)">
+            <rect x="88" y="10" width="11" height="46" rx="4" fill="#10B981"/>
+            <polygon points="88,56 99,56 93.5,70" fill="#F8FAFC"/>
+            <rect x="88" y="2" width="11" height="10" rx="3" fill="#34D399"/>
+          </g>
+        </svg>
+      </div>
       <h1 class="text-lg font-bold text-gray-800 mb-2" x-text="bloqueado ? 'Tu prueba gratuita terminó' : 'Activar cuenta'"></h1>
       <p class="text-gray-500 text-sm mb-4">Transferí $25.000/mes a este alias y avisame acá abajo:</p>
 
@@ -166,6 +212,21 @@
   <!-- Balance -->
   <div class="bg-white px-4 py-5 shadow-sm sticky top-0 z-10 md:px-6">
     <div class="flex justify-between items-center mb-1">
+      <span class="inline-flex items-center gap-1.5">
+        <svg viewBox="0 0 128 128" class="w-6 h-6 rounded-md">
+          <rect width="128" height="128" rx="28" fill="#0F172A"/>
+          <polygon points="34,24 80,24 80,92 75,84 70,92 65,84 60,92 55,84 50,92 45,84 40,92 34,84" fill="#F8FAFC"/>
+          <rect x="42" y="36" width="30" height="5" rx="2.5" fill="#94A3B8"/>
+          <rect x="42" y="48" width="22" height="5" rx="2.5" fill="#94A3B8"/>
+          <rect x="42" y="60" width="26" height="5" rx="2.5" fill="#10B981"/>
+          <g transform="rotate(38 64 64)">
+            <rect x="88" y="10" width="11" height="46" rx="4" fill="#10B981"/>
+            <polygon points="88,56 99,56 93.5,70" fill="#F8FAFC"/>
+            <rect x="88" y="2" width="11" height="10" rx="3" fill="#34D399"/>
+          </g>
+        </svg>
+        <span class="font-bold text-sm text-gray-900">ingresos<span class="text-emerald-600">247</span></span>
+      </span>
       <button @click="logout()" class="text-xs text-gray-400 underline">Salir</button>
     </div>
     <div class="flex items-center justify-center gap-3 mb-1">
