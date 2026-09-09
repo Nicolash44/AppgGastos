@@ -147,16 +147,26 @@ function gastosApp() {
       return this.mesSeleccionado.getFullYear() === hoy.getFullYear() &&
              this.mesSeleccionado.getMonth() === hoy.getMonth();
     },
+    pagoVigente() {
+      if (!this.perfil || !this.perfil.pagado_hasta) return false;
+      return new Date(this.perfil.pagado_hasta) > new Date();
+    },
     get diasRestantesTrial() {
-      if (!this.perfil || this.perfil.pagado) return null;
+      if (!this.perfil || this.pagoVigente()) return null;
       const vence = new Date(this.perfil.trial_inicio);
       vence.setDate(vence.getDate() + 5);
       const dias = Math.ceil((vence - new Date()) / (1000 * 60 * 60 * 24));
       return Math.max(0, dias);
     },
+    get diasRestantesPago() {
+      if (!this.perfil || !this.perfil.pagado_hasta) return null;
+      const dias = Math.ceil((new Date(this.perfil.pagado_hasta) - new Date()) / (1000 * 60 * 60 * 24));
+      return dias > 0 ? dias : null;
+    },
     get bloqueado() {
       if (!this.perfil) return false; // todavía no cargó: no mostrar bloqueo de arranque
-      return !this.perfil.pagado && this.diasRestantesTrial === 0;
+      if (this.pagoVigente()) return false;
+      return this.diasRestantesTrial === 0;
     },
 
     async init() {
@@ -205,7 +215,7 @@ function gastosApp() {
     async cargarPerfil() {
       const { data, error } = await supabaseClient
         .from("perfiles")
-        .select("trial_inicio, pagado, pago_solicitado")
+        .select("trial_inicio, pagado_hasta, pago_solicitado")
         .single();
       if (!error) this.perfil = data;
     },
