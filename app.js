@@ -525,8 +525,8 @@ function gastosApp() {
           datasets: [{
             data: Object.values(porCategoria),
             backgroundColor: [
-              "#ef4444", "#f97316", "#eab308", "#22c55e", "#06b6d4",
-              "#3b82f6", "#8b5cf6", "#ec4899", "#64748b", "#84cc16", "#14b8a6"
+              "#e11d48", "#f97316", "#eab308", "#059669", "#06b6d4",
+              "#0ea5e9", "#8b5cf6", "#ec4899", "#64748b", "#84cc16", "#14b8a6"
             ]
           }]
         },
@@ -548,8 +548,8 @@ function gastosApp() {
         data: {
           labels: meses.map(m => m.label),
           datasets: [
-            { label: "Ingresos", data: meses.map(m => m.ingresos), backgroundColor: "#22c55e", borderRadius: 4 },
-            { label: "Gastos", data: meses.map(m => m.gastos), backgroundColor: "#ef4444", borderRadius: 4 }
+            { label: "Ingresos", data: meses.map(m => m.ingresos), backgroundColor: "#059669", borderRadius: 4 },
+            { label: "Gastos", data: meses.map(m => m.gastos), backgroundColor: "#e11d48", borderRadius: 4 }
           ]
         },
         options: {
@@ -635,7 +635,7 @@ function gastosApp() {
         data: {
           labels: categorias,
           datasets: [
-            { label: this.labelMes(this.compMesA), data: categorias.map(c => porA[c] || 0), backgroundColor: "#3b82f6", borderRadius: 4 },
+            { label: this.labelMes(this.compMesA), data: categorias.map(c => porA[c] || 0), backgroundColor: "#0F172A", borderRadius: 4 },
             { label: this.labelMes(this.compMesB), data: categorias.map(c => porB[c] || 0), backgroundColor: "#94a3b8", borderRadius: 4 }
           ]
         },
