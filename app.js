@@ -22,6 +22,9 @@ function loginApp() {
     password2: "",
     nuevaPassword: "",
     nuevaPassword2: "",
+    verPassword: false,
+    verPasswordRegistro: false,
+    verPasswordNueva: false,
     errorMsg: "",
     infoMsg: "",
 
@@ -166,6 +169,10 @@ function gastosApp() {
     monto: "",
     movimientos: [],
     errorMsg: "",
+    guardando: false,
+    cargandoInicial: true,
+    toast: null,
+    toastTimeout: null,
     chartCategorias: null,
     chartEvolucion: null,
     chartComparacion: null,
@@ -241,11 +248,13 @@ function gastosApp() {
     async init() {
       const { data } = await supabaseClient.auth.getSession();
       this.session = data.session;
-      supabaseClient.auth.onAuthStateChange((_event, session) => {
-        this.session = session;
-        if (session) this.arrancar();
-      });
       if (this.session) this.arrancar();
+
+      supabaseClient.auth.onAuthStateChange((_event, session) => {
+        const teniaSesion = !!this.session;
+        this.session = session;
+        if (session && !teniaSesion) this.arrancar();
+      });
 
       window.matchMedia("(max-width: 767px)").addEventListener("change", (e) => {
         this.esMobile = e.matches;
@@ -254,7 +263,7 @@ function gastosApp() {
 
     async arrancar() {
       await this.cargarPerfil();
-      if (this.bloqueado) return; // no cargar nada más si la cuenta está bloqueada
+      if (this.bloqueado) { this.cargandoInicial = false; return; } // no cargar nada más si la cuenta está bloqueada
 
       this.mostrarComparacion = !this.esMobile;
       await this.cargarCategorias();
@@ -264,8 +273,9 @@ function gastosApp() {
       this.compMesA = this.formatMesInput(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
       this.compMesB = this.formatMesInput(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1));
 
-      this.cargarTodo();
-      this.cargarComparacion();
+      this.cargandoInicial = false;
+      await this.cargarTodo();
+      await this.cargarComparacion();
     },
 
     formatMesInput(d) {
@@ -470,34 +480,69 @@ function gastosApp() {
 
     async guardar() {
       this.errorMsg = "";
-      if (!this.puedeGuardar) return;
+      if (!this.puedeGuardar || this.guardando) return;
+      this.guardando = true;
 
-      const { error } = await supabaseClient.from("transacciones").insert({
-        tipo: this.tipo,
-        categoria: this.categoria,
-        detalle: this.detalle || null,
-        monto: parseFloat(this.monto)
-      });
+      try {
+        const { error } = await supabaseClient.from("transacciones").insert({
+          tipo: this.tipo,
+          categoria: this.categoria,
+          detalle: this.detalle || null,
+          monto: parseFloat(this.monto)
+        });
 
-      if (error) {
-        this.errorMsg = "Error al guardar. Intentá de nuevo.";
-        return;
+        if (error) {
+          this.errorMsg = "Error al guardar. Intentá de nuevo.";
+          return;
+        }
+
+        this.categoria = "";
+        this.detalle = "";
+        this.monto = "";
+        await this.cargarTodo();
+        await this.cargarComparacion();
+      } finally {
+        this.guardando = false;
       }
-
-      this.categoria = "";
-      this.detalle = "";
-      this.monto = "";
-      this.cargarTodo();
-      this.cargarComparacion();
     },
 
-    async eliminar(id) {
-      if (!confirm("¿Eliminar este movimiento?")) return;
-      const { error } = await supabaseClient.from("transacciones").delete().eq("id", id);
-      if (!error) {
-        this.cargarTodo();
-        this.cargarComparacion();
-      }
+    async eliminar(mov) {
+      const { error } = await supabaseClient.from("transacciones").delete().eq("id", mov.id);
+      if (error) return;
+
+      this.movimientos = this.movimientos.filter(m => m.id !== mov.id);
+      this.renderChartCategorias();
+      this.cargarEvolucion();
+      this.cargarComparacion();
+
+      this.mostrarToast("Movimiento eliminado", async () => {
+        await supabaseClient.from("transacciones").insert({
+          tipo: mov.tipo,
+          categoria: mov.categoria,
+          detalle: mov.detalle,
+          monto: mov.monto,
+          fecha: mov.fecha
+        });
+        await this.cargarTodo();
+        await this.cargarComparacion();
+      });
+    },
+
+    mostrarToast(msg, onDeshacer) {
+      clearTimeout(this.toastTimeout);
+      const id = Date.now();
+      this.toast = { id, msg, onDeshacer };
+      this.toastTimeout = setTimeout(() => {
+        if (this.toast && this.toast.id === id) this.toast = null;
+      }, 5000);
+    },
+
+    async deshacerToast() {
+      if (!this.toast || !this.toast.onDeshacer) return;
+      const accion = this.toast.onDeshacer;
+      clearTimeout(this.toastTimeout);
+      this.toast = null;
+      await accion();
     },
 
     formatMonto(n) {
@@ -628,7 +673,7 @@ function gastosApp() {
       if (!ctx) return;
       if (this.chartComparacion) this.chartComparacion.destroy();
 
-      if (categorias.length === 0) return;
+      if (categorias.length === 0 || !this.mostrarComparacion) return;
 
       this.chartComparacion = new Chart(ctx, {
         type: "bar",

@@ -1,0 +1,127 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-09T00:00:00.000Z",
+  "title": "Design System: Ingresos247",
+  "extensions": {
+    "colorMeta": {
+      "navy": { "role": "neutral", "displayName": "Navy", "canonical": "#0F172A", "tonalRamp": ["#0F172A", "#1E293B", "#334155", "#475569", "#64748B", "#94A3B8", "#E2E8F0", "#F8FAFC"] },
+      "emerald": { "role": "primary", "displayName": "Emerald", "canonical": "#059669", "tonalRamp": ["#064E3B", "#065F46", "#047857", "#059669", "#10B981", "#34D399", "#A7F3D0", "#ECFDF5"] },
+      "rose": { "role": "secondary", "displayName": "Rose", "canonical": "#E11D48", "tonalRamp": ["#881337", "#9F1239", "#BE123C", "#E11D48", "#F43F5E", "#FB7185", "#FECDD3", "#FFF1F2"] },
+      "amber": { "role": "tertiary", "displayName": "Amber", "canonical": "#D97706", "tonalRamp": ["#78350F", "#92400E", "#B45309", "#D97706", "#F59E0B", "#FBBF24", "#FDE68A", "#FFFBEB"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Montos de dinero (balance, precio) y la marca ingresos247. Nunca copy general." },
+      "body": { "displayName": "Body", "purpose": "Todo el texto de interfaz: copy, inputs, valores de lista." },
+      "label": { "displayName": "Label", "purpose": "Eyebrows de sección en mayúscula de intención (Categorías, Movimientos)." },
+      "button": { "displayName": "Button", "purpose": "Texto de botones sólidos y fantasma." }
+    },
+    "shadows": [
+      { "name": "ambient-card", "value": "0 1px 2px rgba(15,23,42,0.04), 0 2px 10px rgba(15,23,42,0.05)", "purpose": "Tarjetas de contenido: formulario de carga, comparativo, paneles de gráficos." },
+      { "name": "ambient-list-item", "value": "0 1px 2px rgba(15,23,42,0.04), 0 2px 8px rgba(15,23,42,0.05)", "purpose": "Filas individuales del listado de movimientos." },
+      { "name": "ambient-header", "value": "0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.06)", "purpose": "Header de balance sticky que flota sobre el contenido al scrollear." },
+      { "name": "ambient-hero", "value": "0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.08)", "purpose": "Tarjeta de precio en la landing, el foco de conversión." },
+      { "name": "overlay", "value": "0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)", "purpose": "Toast de deshacer flotante (shadow-lg de Tailwind, única sombra no tintada en navy por ser un overlay temporal)." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "150ms ease (Tailwind `transition`/`transition-colors` default)", "purpose": "Cambios de color en botones/chips al tocar o cambiar de tipo." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón Primario",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de la pantalla (Guardar, Empezar prueba gratis, Ya transferí).",
+      "html": "<button class=\"ds-btn-primary\">Guardar</button>",
+      "css": ".ds-btn-primary { background: #059669; color: #FFFFFF; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-size: 1rem; font-weight: 600; border: none; border-radius: 12px; height: 48px; padding: 0 24px; transition: background-color 150ms ease; } .ds-btn-primary:active { background: #047857; } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #059669; } .ds-btn-primary:disabled { opacity: 0.4; }"
+    },
+    {
+      "name": "Botón Danger",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Acción principal cuando el contexto es un gasto (+ Gasto, Guardar en modo gasto).",
+      "html": "<button class=\"ds-btn-danger\">+ Gasto</button>",
+      "css": ".ds-btn-danger { background: #E11D48; color: #FFFFFF; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-size: 1rem; font-weight: 600; border: none; border-radius: 12px; height: 48px; padding: 0 24px; transition: background-color 150ms ease; } .ds-btn-danger:active { background: #BE123C; } .ds-btn-danger:focus-visible { outline: none; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #E11D48; }"
+    },
+    {
+      "name": "Botón Fantasma",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Navegación de baja jerarquía: Volver, Salir, links de auth.",
+      "html": "<button class=\"ds-btn-ghost\">Salir</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #64748B; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-size: 0.875rem; font-weight: 400; text-decoration: underline; border: none; padding: 0; height: auto; cursor: pointer; } .ds-btn-ghost:focus-visible { outline: none; box-shadow: 0 0 0 2px #94A3B8; border-radius: 4px; }"
+    },
+    {
+      "name": "Chip de categoría (seleccionado)",
+      "kind": "chip",
+      "refersTo": "chip-selected",
+      "description": "Categoría activa del formulario de carga; el color sigue al tipo (ingreso=emerald, gasto=rose).",
+      "html": "<button class=\"ds-chip-selected\">Mercado</button>",
+      "css": ".ds-chip-selected { background: #059669; color: #FFFFFF; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-size: 0.875rem; font-weight: 500; border: 1px solid #059669; border-radius: 9999px; height: 36px; padding: 0 12px; } .ds-chip-selected:focus-visible { outline: none; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #64748B; }"
+    },
+    {
+      "name": "Chip de categoría (sin seleccionar)",
+      "kind": "chip",
+      "refersTo": "chip-unselected",
+      "description": "Resto de las categorías disponibles, no elegidas.",
+      "html": "<button class=\"ds-chip-unselected\">Nafta</button>",
+      "css": ".ds-chip-unselected { background: #F8FAFC; color: #334155; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-size: 0.875rem; font-weight: 500; border: 1px solid #E2E8F0; border-radius: 9999px; height: 36px; padding: 0 12px; } .ds-chip-unselected:focus-visible { outline: none; box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #94A3B8; }"
+    },
+    {
+      "name": "Tarjeta",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Contenedor blanco base: formulario de carga, comparativo, paneles de gráficos.",
+      "html": "<div class=\"ds-card\">Contenido de la tarjeta</div>",
+      "css": ".ds-card { background: #FFFFFF; border-radius: 16px; padding: 16px; box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 2px 10px rgba(15,23,42,0.05); }"
+    },
+    {
+      "name": "Input de texto",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo estándar (email, detalle, categoría nueva).",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Detalle (opcional)\">",
+      "css": ".ds-input { background: #FFFFFF; color: #0F172A; font-family: ui-sans-serif, system-ui, -apple-system, sans-serif; font-size: 1rem; border: 1px solid #E2E8F0; border-radius: 12px; height: 48px; padding: 0 16px; width: 100%; box-sizing: border-box; } .ds-input::placeholder { color: #94A3B8; } .ds-input:focus { outline: none; border-color: transparent; box-shadow: 0 0 0 2px #059669; }"
+    },
+    {
+      "name": "Balance",
+      "kind": "custom",
+      "refersTo": "display-balance",
+      "description": "El número insignia del sistema: balance del mes, color en vivo según el signo.",
+      "html": "<div class=\"ds-balance ds-balance--positive\">$ 45.320,00</div>",
+      "css": ".ds-balance { font-family: 'Space Grotesk', sans-serif; font-size: 2.25rem; font-weight: 700; line-height: 1.1; letter-spacing: -0.01em; text-align: center; } .ds-balance--positive { color: #047857; } .ds-balance--negative { color: #E11D48; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Recibo Prolijo",
+    "overview": "Ingresos247 le pone orden a los \"papelitos sueltos\": la promesa del producto es que cargar un movimiento y entenderlo mes a mes sea instantáneo, sin fricción y sin ruido visual. El sistema es cálido y directo — coherente con el \"vos\" rioplatense del copy — nunca frío ni corporativo, pero tampoco informal al punto de restarle seriedad al hecho de que hay plata real de por medio. La confianza se construye con orden (tarjetas prolijas, jerarquía clara, un solo número grande por pantalla) y con calidez humana (soporte personal, sombras suaves en vez de bordes duros), no con ornamento.\n\nLa app es mobile-first: una sola columna con acciones grandes al alcance del pulgar, que se reorganiza en dos columnas recién a partir de md. El balance del mes es siempre el elemento más grande de la pantalla y el único que cambia de color según el signo — todo lo demás es jerárquicamente secundario a ese número.",
+    "keyCharacteristics": [
+      "Un solo par de colores de acento (emerald/rose) con significado semántico fijo, nunca decorativo.",
+      "Sombras suaves y tintadas en navy en vez de bordes duros para separar tarjetas del fondo.",
+      "Space Grotesk reservado para plata y marca; el resto es tipografía de sistema.",
+      "Esquinas redondeadas en todos lados, sin excepción — la escala de radio crece con la jerarquía de la superficie.",
+      "Objetivos táctiles grandes (mínimo 48px) porque se usa con el pulgar, parado, a las apuradas."
+    ],
+    "rules": [
+      { "name": "The Semantic Duo Rule", "body": "Emerald y rose son los únicos dos acentos con significado, y ese significado es fijo: emerald = positivo/acción, rose = negativo/gasto. Nunca se usan al revés ni como decoración sin significado.", "section": "colors" },
+      { "name": "The Money Gets The Good Font Rule", "body": "Space Grotesk se usa solo para montos de dinero (balance, precio, totales) y para la palabra \"ingresos247\" de la marca. Ninguna otra cadena de texto la usa, sin excepciones.", "section": "typography" },
+      { "name": "The Navy Shadow Rule", "body": "Toda sombra usa rgba(15,23,42, ...), nunca rgba(0,0,0,...). Una sombra negra pura se siente dura y fuera de lugar en un sistema que por lo demás es cálido y suave.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar siempre rgba(15,23,42, ...) para sombras — nunca rgba(0,0,0,...).",
+      "Do reservar Space Grotesk para plata y para la marca; todo el resto es tipografía de sistema.",
+      "Do mantener emerald = positivo/acción y rose = negativo/gasto en toda la app, sin excepciones ni usos decorativos.",
+      "Do darle a toda acción principal un objetivo táctil mínimo de 48px (h-12).",
+      "Do separar tarjetas del fondo con sombra, nunca con borde."
+    ],
+    "donts": [
+      "Don't sumar un tercer acento de color para una feature nueva — extendé el uso de emerald/rose o quedate en slate.",
+      "Don't reintroducir blue-*, gray-* o red-600 en las pantallas de auth (login, recuperar contraseña, registro, nueva contraseña) — ya se migraron a emerald/slate/rose para unificarlas con el resto de la app.",
+      "Don't agregar sombras duras o bordes como alternativa a la sombra ambiental de las tarjetas.",
+      "Don't dejar que un botón fantasma/secundario compita visualmente con un botón primario emerald o rose en la misma pantalla."
+    ]
+  }
+}
