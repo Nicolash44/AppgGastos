@@ -1,5 +1,11 @@
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Estado compartido entre loginApp y gastosApp: fuerza la pantalla de "nueva contraseña"
+// aunque el link de recuperación ya haya dejado una sesión activa.
+document.addEventListener("alpine:init", () => {
+  Alpine.store("auth", { recuperando: false });
+});
+
 // Se usa una sola vez por usuario nuevo, para poblar su tabla "categorias" en Supabase.
 // Una vez sembradas, cada usuario las administra desde la app (agregar/eliminar).
 const CATEGORIAS_DEFAULT = {
@@ -10,18 +16,26 @@ const CATEGORIAS_DEFAULT = {
 function loginApp() {
   return {
     session: null,
-    vista: "landing", // landing | login | registro
+    vista: "landing", // landing | login | registro | recuperar | nueva-contraseña
     email: "",
     password: "",
     password2: "",
+    nuevaPassword: "",
+    nuevaPassword2: "",
     errorMsg: "",
     infoMsg: "",
 
     async init() {
       const { data } = await supabaseClient.auth.getSession();
       this.session = data.session;
-      supabaseClient.auth.onAuthStateChange((_event, session) => {
+      supabaseClient.auth.onAuthStateChange((event, session) => {
         this.session = session;
+        if (event === "PASSWORD_RECOVERY") {
+          Alpine.store("auth").recuperando = true;
+          this.vista = "nueva-contraseña";
+          this.errorMsg = "";
+          this.infoMsg = "";
+        }
       });
     },
 
@@ -33,6 +47,12 @@ function loginApp() {
 
     irARegistro() {
       this.vista = "registro";
+      this.errorMsg = "";
+      this.infoMsg = "";
+    },
+
+    irARecuperar() {
+      this.vista = "recuperar";
       this.errorMsg = "";
       this.infoMsg = "";
     },
@@ -81,6 +101,48 @@ function loginApp() {
         this.infoMsg = "Te mandamos un mail para confirmar tu cuenta. Revisalo (y la carpeta de spam) y después volvé a entrar.";
       }
       // si data.session existe, onAuthStateChange actualiza this.session solo y arranca la app
+    },
+
+    async enviarRecuperacion() {
+      this.errorMsg = "";
+      this.infoMsg = "";
+
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(this.email, {
+        redirectTo: window.location.origin + window.location.pathname
+      });
+
+      if (error) {
+        this.errorMsg = "No se pudo enviar el mail. Revisá el email e intentá de nuevo.";
+        return;
+      }
+
+      this.infoMsg = "Si ese email tiene una cuenta, te mandamos un link para restablecer la contraseña. Revisá (y la carpeta de spam).";
+    },
+
+    async actualizarPassword() {
+      this.errorMsg = "";
+
+      if (this.nuevaPassword.length < 8) {
+        this.errorMsg = "La contraseña tiene que tener al menos 8 caracteres";
+        return;
+      }
+      if (this.nuevaPassword !== this.nuevaPassword2) {
+        this.errorMsg = "Las contraseñas no coinciden";
+        return;
+      }
+
+      const { error } = await supabaseClient.auth.updateUser({ password: this.nuevaPassword });
+
+      if (error) {
+        this.errorMsg = "No se pudo actualizar la contraseña. Probá pedir el link de nuevo.";
+        return;
+      }
+
+      this.infoMsg = "Contraseña actualizada. Ya podés usar la app.";
+      this.nuevaPassword = "";
+      this.nuevaPassword2 = "";
+      Alpine.store("auth").recuperando = false;
+      // session ya está activa (la estableció el link de recuperación), la app pasa sola
     }
   };
 }
