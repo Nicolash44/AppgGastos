@@ -426,8 +426,7 @@ function gastosApp() {
     },
 
     async cargarTodo() {
-      await this.cargarMovimientos();
-      await this.cargarEvolucion();
+      await Promise.all([this.cargarMovimientos(), this.cargarEvolucion()]);
     },
 
     async cargarMovimientos() {
@@ -499,8 +498,7 @@ function gastosApp() {
         this.categoria = "";
         this.detalle = "";
         this.monto = "";
-        await this.cargarTodo();
-        await this.cargarComparacion();
+        await Promise.all([this.cargarTodo(), this.cargarComparacion()]);
       } finally {
         this.guardando = false;
       }
@@ -523,8 +521,7 @@ function gastosApp() {
           monto: mov.monto,
           fecha: mov.fecha
         });
-        await this.cargarTodo();
-        await this.cargarComparacion();
+        await Promise.all([this.cargarTodo(), this.cargarComparacion()]);
       });
     },
 
