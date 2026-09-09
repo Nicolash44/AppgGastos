@@ -1,0 +1,17 @@
+<svg viewBox="0 0 460 120" xmlns="http://www.w3.org/2000/svg">
+  <rect x="8" y="8" width="104" height="104" rx="24" fill="#0F172A"/>
+
+  <polygon points="32,26 74,26 74,84 70,77 65,84 60,77 55,84 50,77 45,84 40,77 35,84 32,77"
+    fill="#F8FAFC"/>
+  <rect x="39" y="36" width="26" height="4.5" rx="2.25" fill="#94A3B8"/>
+  <rect x="39" y="46" width="19" height="4.5" rx="2.25" fill="#94A3B8"/>
+  <rect x="39" y="56" width="22" height="4.5" rx="2.25" fill="#10B981"/>
+
+  <g transform="rotate(38 60 60)">
+    <rect x="80" y="20" width="10" height="40" rx="3.5" fill="#10B981"/>
+    <polygon points="80,60 90,60 85,72" fill="#F8FAFC"/>
+    <rect x="80" y="13" width="10" height="9" rx="2.5" fill="#34D399"/>
+  </g>
+
+  <text x="136" y="76" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="700" font-size="46" fill="#0F172A">ingresos<tspan fill="#10B981">247</tspan></text>
+</svg>
