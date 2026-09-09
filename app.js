@@ -87,13 +87,17 @@ function loginApp() {
 
 // Reemplazá por tu alias real de Mercado Pago (o CBU/CVU) para recibir transferencias
 const ALIAS_PAGO = "ingresos247";
+// Tu propio UUID (Authentication → Users), el mismo que usa la función es_admin() en Supabase
+const ADMIN_USER_ID = "ee15e501-77cf-4201-b322-331af1337edd";
 
 function gastosApp() {
   return {
     session: null,
-    perfil: null, // { trial_inicio, pagado, pago_solicitado } | null mientras carga
+    perfil: null, // { trial_inicio, pagado_hasta, pago_solicitado } | null mientras carga
     aliasPago: ALIAS_PAGO,
     mostrarPago: false,
+    mostrarAdmin: false,
+    usuariosAdmin: [],
     tipo: "gasto",
     categoria: "",
     detalle: "",
@@ -168,6 +172,9 @@ function gastosApp() {
       if (this.pagoVigente()) return false;
       return this.diasRestantesTrial === 0;
     },
+    get esAdmin() {
+      return !!(this.session && this.session.user && this.session.user.id === ADMIN_USER_ID);
+    },
 
     async init() {
       const { data } = await supabaseClient.auth.getSession();
@@ -233,6 +240,45 @@ function gastosApp() {
       } catch (e) {
         // si el navegador bloquea el clipboard, no rompe nada, el usuario copia a mano
       }
+    },
+
+    // ==================== ADMIN ====================
+
+    async cargarUsuariosAdmin() {
+      const { data, error } = await supabaseClient.rpc("admin_listar_usuarios");
+      if (!error) this.usuariosAdmin = data;
+    },
+
+    abrirAdmin() {
+      this.mostrarAdmin = true;
+      this.cargarUsuariosAdmin();
+    },
+
+    estadoUsuario(u) {
+      const ahora = new Date();
+      if (u.pagado_hasta && new Date(u.pagado_hasta) > ahora) {
+        const dias = Math.ceil((new Date(u.pagado_hasta) - ahora) / 86400000);
+        return `Pago vigente · ${dias} día(s)`;
+      }
+      const venceTrial = new Date(u.trial_inicio);
+      venceTrial.setDate(venceTrial.getDate() + 5);
+      if (venceTrial > ahora) {
+        const dias = Math.ceil((venceTrial - ahora) / 86400000);
+        return `Trial · ${dias} día(s)`;
+      }
+      return "Bloqueado";
+    },
+
+    async confirmarPagoAdmin(userId) {
+      if (!confirm("¿Confirmar 1 mes de pago para este usuario?")) return;
+      const { error } = await supabaseClient.rpc("confirmar_pago", { p_user_id: userId, meses: 1 });
+      if (!error) this.cargarUsuariosAdmin();
+    },
+
+    async bloquearUsuarioAdmin(userId) {
+      if (!confirm("¿Bloquear a este usuario ahora mismo?")) return;
+      const { error } = await supabaseClient.rpc("admin_bloquear_usuario", { p_user_id: userId });
+      if (!error) this.cargarUsuariosAdmin();
     },
 
     // ==================== CATEGORÍAS ====================

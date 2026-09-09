@@ -202,6 +202,33 @@
   <!-- Contenido normal de la app -->
   <div x-show="!bloqueado">
 
+  <!-- Panel de admin -->
+  <div x-show="mostrarAdmin" x-cloak class="fixed inset-0 bg-white z-20 overflow-y-auto">
+    <div class="max-w-2xl mx-auto p-4">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-lg font-bold text-gray-800">Usuarios</h1>
+        <button @click="mostrarAdmin = false" class="text-sm text-gray-400 underline">Cerrar</button>
+      </div>
+
+      <div class="space-y-2">
+        <template x-for="u in usuariosAdmin" :key="u.user_id">
+          <div class="bg-gray-50 rounded-xl p-3 flex justify-between items-center gap-2">
+            <div class="min-w-0">
+              <div class="font-medium text-gray-800 text-sm truncate" x-text="u.email"></div>
+              <div class="text-xs text-gray-500" x-text="estadoUsuario(u)"></div>
+              <div class="text-xs text-amber-600" x-show="u.pago_solicitado">Avisó que transfirió</div>
+            </div>
+            <div class="flex gap-2 shrink-0">
+              <button @click="confirmarPagoAdmin(u.user_id)" class="px-3 h-9 rounded-lg bg-emerald-600 text-white text-xs font-medium">Confirmar pago</button>
+              <button @click="bloquearUsuarioAdmin(u.user_id)" class="px-3 h-9 rounded-lg bg-red-50 text-red-600 text-xs font-medium border border-red-200">Bloquear</button>
+            </div>
+          </div>
+        </template>
+        <p x-show="usuariosAdmin.length === 0" class="text-center text-gray-400 text-sm py-6">Sin usuarios todavía</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Aviso de prueba activa -->
   <div x-show="diasRestantesTrial !== null" x-cloak class="bg-emerald-50 text-emerald-700 text-sm text-center py-2 px-4">
     Te quedan <span x-text="diasRestantesTrial"></span> días de prueba gratis ·
@@ -234,7 +261,10 @@
         </svg>
         <span class="font-bold text-sm text-gray-900">ingresos<span class="text-emerald-600">247</span></span>
       </span>
-      <button @click="logout()" class="text-xs text-gray-400 underline">Salir</button>
+      <span class="flex items-center gap-3">
+        <button x-show="esAdmin" x-cloak @click="abrirAdmin()" class="text-xs text-blue-600 underline">Admin</button>
+        <button @click="logout()" class="text-xs text-gray-400 underline">Salir</button>
+      </span>
     </div>
     <div class="flex items-center justify-center gap-3 mb-1">
       <button @click="mesAnterior()" class="w-8 h-8 flex items-center justify-center text-gray-400 text-lg">‹</button>
