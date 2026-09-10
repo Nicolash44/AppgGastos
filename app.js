@@ -178,6 +178,7 @@ function gastosApp() {
     procesandoMP: false,
     mpInitPoint: null,
     confirmandoSuscripcion: false,
+    mostrarGraciasSuscripcion: false,
     mostrarAdmin: false,
     usuariosAdmin: [],
     tipo: "gasto",
@@ -302,6 +303,7 @@ function gastosApp() {
           await this.cargarPerfil();
         }
         this.confirmandoSuscripcion = false;
+        if (this.pagoVigente()) this.mostrarGraciasSuscripcion = true;
       }
 
       if (this.bloqueado) { this.cargandoInicial = false; return; } // no cargar nada más si la cuenta está bloqueada

@@ -293,6 +293,33 @@
     </div>
   </div>
 
+  <!-- Gracias por suscribirte: overlay que tapa todo hasta que el usuario lo cierra -->
+  <div x-show="mostrarGraciasSuscripcion" x-cloak class="fixed inset-0 bg-white z-30 flex items-center justify-center px-4">
+    <div class="w-full max-w-sm text-center">
+      <div class="relative inline-block mb-4">
+        <svg viewBox="0 0 128 128" class="w-16 h-16 rounded-2xl">
+          <rect width="128" height="128" rx="28" fill="#0F172A"/>
+          <polygon points="34,24 80,24 80,92 75,84 70,92 65,84 60,92 55,84 50,92 45,84 40,92 34,84" fill="#F8FAFC"/>
+          <rect x="42" y="36" width="30" height="5" rx="2.5" fill="#94A3B8"/>
+          <rect x="42" y="48" width="22" height="5" rx="2.5" fill="#94A3B8"/>
+          <rect x="42" y="60" width="26" height="5" rx="2.5" fill="#10B981"/>
+          <g transform="rotate(38 64 64)">
+            <rect x="88" y="10" width="11" height="46" rx="4" fill="#10B981"/>
+            <polygon points="88,56 99,56 93.5,70" fill="#F8FAFC"/>
+            <rect x="88" y="2" width="11" height="10" rx="3" fill="#34D399"/>
+          </g>
+        </svg>
+        <span class="absolute -top-3 -right-3 text-3xl" aria-hidden="true">🎉</span>
+      </div>
+      <h1 class="text-xl font-bold text-slate-900 mb-2">¡Gracias por suscribirte!</h1>
+      <p class="text-slate-500 text-sm mb-6">Tu pago se acreditó y tu suscripción a ingresos247 ya está activa.</p>
+      <button @click="mostrarGraciasSuscripcion = false"
+        class="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base active:bg-emerald-700">
+        Empezar a usar la app
+      </button>
+    </div>
+  </div>
+
   <!-- Pantalla de pago: bloqueo total al vencer el trial, o abierta a mano desde el aviso -->
   <div x-show="(bloqueado || mostrarPago) && !confirmandoSuscripcion" x-cloak class="min-h-screen flex items-center justify-center px-4">
     <div class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm text-center">
