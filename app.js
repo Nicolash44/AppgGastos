@@ -291,11 +291,13 @@ function gastosApp() {
 
       // Volvió del checkout de Mercado Pago: el webhook puede tardar unos segundos
       // en acreditar, así que reintentamos un rato antes de mostrar bloqueo.
+      // Ojo: MP le pega sus propios parámetros al back_url con un "?" en vez de
+      // un "&" (ej. "?suscripcion=pendiente?preapproval_id=..."), así que acá
+      // "suscripcion" termina valiendo "pendiente?preapproval_id=..." en vez de
+      // "pendiente" a secas — por eso se chequea con startsWith, no con "===".
       const params = new URLSearchParams(window.location.search);
-      if (params.get("suscripcion") === "pendiente") {
-        params.delete("suscripcion");
-        const nuevaUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
-        window.history.replaceState({}, "", nuevaUrl);
+      if (params.get("suscripcion")?.startsWith("pendiente")) {
+        window.history.replaceState({}, "", window.location.pathname);
 
         this.confirmandoSuscripcion = true;
         for (let intento = 0; intento < 5 && !this.pagoVigente(); intento++) {
