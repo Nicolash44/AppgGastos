@@ -179,6 +179,7 @@ function gastosApp() {
     mpInitPoint: null,
     confirmandoSuscripcion: false,
     mostrarGraciasSuscripcion: false,
+    mostrarPagoPendiente: false,
     mostrarAdmin: false,
     usuariosAdmin: [],
     tipo: "gasto",
@@ -305,12 +306,19 @@ function gastosApp() {
           await this.cargarPerfil();
         }
         this.confirmandoSuscripcion = false;
-        // Mostramos el agradecimiento igual aunque el webhook todavía no haya
-        // extendido pagado_hasta (puede tardar más que el polling de acá arriba):
-        // si volvió con este parámetro es porque ya completó el checkout de MP.
-        // pagoVigente() no sirve como condición porque si todavía está en trial
-        // gratis, bloqueado ya da false de por sí y esto ni se llega a evaluar bien.
-        if (!this.bloqueado) this.mostrarGraciasSuscripcion = true;
+        if (this.pagoVigente()) {
+          // Confirmado de verdad: el webhook ya extendió pagado_hasta.
+          this.mostrarGraciasSuscripcion = true;
+        } else if (!this.bloqueado) {
+          // Todavía no se confirmó (puede estar rechazada, o el webhook está
+          // tardando más de lo que esperamos) pero como sigue en trial/gracia
+          // igual puede seguir usando la app — se lo avisamos sin asegurarle
+          // algo que no pasó.
+          this.mostrarPagoPendiente = true;
+        }
+        // Si además está bloqueado (trial vencido y el pago no se confirmó),
+        // no hace falta nada especial acá: va a caer en la pantalla normal de
+        // "Activar cuenta" de más abajo, donde puede reintentar o transferir.
       }
 
       if (this.bloqueado) { this.cargandoInicial = false; return; } // no cargar nada más si la cuenta está bloqueada
