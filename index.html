@@ -114,6 +114,11 @@
     <button @click="irALogin()" class="w-full text-center text-sm text-slate-400 underline">
       Ya tengo cuenta, ingresar
     </button>
+
+    <p class="text-center text-xs text-slate-400 mt-6">
+      <a href="terminos.html" class="underline">Términos y Condiciones</a> ·
+      <a href="privacidad.html" class="underline">Política de Privacidad</a>
+    </p>
   </div>
 
   <!-- Login -->
@@ -269,6 +274,10 @@
           class="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base active:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-500">
           Crear cuenta y empezar
         </button>
+        <p class="text-center text-xs text-slate-400">
+          Al crear tu cuenta aceptás los <a href="terminos.html" class="underline">Términos y Condiciones</a>
+          y la <a href="privacidad.html" class="underline">Política de Privacidad</a>.
+        </p>
         <p x-show="errorMsg" x-text="errorMsg" class="text-rose-600 text-sm text-center"></p>
       </form>
     </template>

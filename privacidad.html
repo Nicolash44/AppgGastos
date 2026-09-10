@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidad · Ingresos247</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: { display: ['"Space Grotesk"', 'sans-serif'] }
+      }
+    }
+  };
+</script>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-700">
+
+<div class="max-w-2xl mx-auto px-4 py-10">
+
+  <a href="index.html" class="inline-flex items-center gap-2 mb-8">
+    <svg viewBox="0 0 128 128" class="w-8 h-8 rounded-lg">
+      <rect width="128" height="128" rx="28" fill="#0F172A"/>
+      <polygon points="34,24 80,24 80,92 75,84 70,92 65,84 60,92 55,84 50,92 45,84 40,92 34,84" fill="#F8FAFC"/>
+      <rect x="42" y="36" width="30" height="5" rx="2.5" fill="#94A3B8"/>
+      <rect x="42" y="48" width="22" height="5" rx="2.5" fill="#94A3B8"/>
+      <rect x="42" y="60" width="26" height="5" rx="2.5" fill="#10B981"/>
+      <g transform="rotate(38 64 64)">
+        <rect x="88" y="10" width="11" height="46" rx="4" fill="#10B981"/>
+        <polygon points="88,56 99,56 93.5,70" fill="#F8FAFC"/>
+        <rect x="88" y="2" width="11" height="10" rx="3" fill="#34D399"/>
+      </g>
+    </svg>
+    <span class="font-display font-bold text-slate-900">ingresos<span class="text-emerald-600">247</span></span>
+  </a>
+
+  <h1 class="text-2xl font-bold text-slate-900 mb-1">Política de Privacidad</h1>
+  <p class="text-sm text-slate-400 mb-8">Última actualización: septiembre de 2026.</p>
+
+  <div class="space-y-6 text-sm leading-relaxed">
+    <p>
+      Esta política explica qué datos personales recopila ingresos247 (el "servicio"), para qué se usan,
+      dónde se guardan y qué derechos tenés sobre ellos. Está redactada en base a la Ley 25.326 de
+      Protección de Datos Personales de Argentina.
+    </p>
+
+    <section>
+      <h2 class="font-semibold text-slate-900 mb-2">Qué datos recopilamos</h2>
+      <ul class="list-disc pl-5 space-y-1">
+        <li><strong>Datos de cuenta:</strong> tu email y contraseña (si te registrás con email), o tu nombre, email
+          y foto de perfil si elegís iniciar sesión con Google.</li>
+        <li><strong>Datos financieros que vos cargás:</strong> los movimientos de ingresos y gastos que registrás
+          en la app (categoría, monto, detalle y fecha) y las categorías que creás. Son datos que ingresás
+          voluntariamente para que la app funcione — no los generamos ni inferimos nosotros.</li>
+        <li><strong>Datos de pago:</strong> si te suscribís con Mercado Pago, el pago lo procesa Mercado Pago
+          directamente — nosotros no vemos ni guardamos el número de tu tarjeta. Solo guardamos el estado de tu
+          suscripción (activa/cancelada) y la fecha hasta la que tenés acceso pago.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="font-semibold text-slate-900 mb-2">Para qué los usamos</h2>
+      <ul class="list-disc pl-5 space-y-1">
+        <li>Para darte acceso a la app y mostrarte tus propios datos (tus movimientos, gráficos y comparativas).</li>
+        <li>Para mandarte mails transaccionales: confirmación de cuenta, recuperación de contraseña, y avisos
+          relacionados con tu suscripción.</li>
+        <li>Para procesar tu suscripción y cobro mensual (vía Mercado Pago o transferencia manual).</li>
+        <li>Para darte soporte cuando nos escribís con una consulta.</li>
+      </ul>
+      <p class="mt-2">No usamos tus datos para publicidad ni los vendemos a terceros.</p>
+    </section>
+
+    <section>
+      <h2 class="font-semibold text-slate-900 mb-2">Con quién los compartimos</h2>
+      <p class="mb-2">
+        Solo con los proveedores que necesitamos para que el servicio funcione, cada uno con su propia política
+        de privacidad:
+      </p>
+      <ul class="list-disc pl-5 space-y-1">
+        <li><strong>Supabase</strong> — aloja la base de datos, la autenticación y el backend de la app.</li>
+        <li><strong>Mercado Pago</strong> — procesa los pagos de la suscripción, si elegís esa opción.</li>
+        <li><strong>Resend</strong> — envía los mails transaccionales (confirmación, recuperación de contraseña,
+          avisos).</li>
+        <li><strong>Google</strong> — solo si elegís iniciar sesión con tu cuenta de Google.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="font-semibold text-slate-900 mb-2">Seguridad</h2>
+      <p>
+        Tu contraseña nunca se guarda en texto plano — la maneja Supabase Auth de forma encriptada. El acceso a
+        tus movimientos y categorías está protegido por reglas a nivel de base de datos (Row Level Security), que
+        aseguran que solo vos (y nadie más) puedas ver o modificar tus propios datos.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="font-semibold text-slate-900 mb-2">Tus derechos</h2>
+      <p>
+        Podés pedirnos en cualquier momento acceder, corregir o borrar tus datos. Si borrás tu cuenta (o nos
+        escribís pidiéndolo), tus movimientos y categorías se eliminan junto con ella, sin quedar residuos.
+        Escribinos a <a href="mailto:musicsincetomorrow@gmail.com" class="text-emerald-700 underline">musicsincetomorrow@gmail.com</a>
+        para cualquiera de estos pedidos.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="font-semibold text-slate-900 mb-2">Menores de edad</h2>
+      <p>ingresos247 no está dirigido a menores de 18 años.</p>
+    </section>
+
+    <section>
+      <h2 class="font-semibold text-slate-900 mb-2">Cambios a esta política</h2>
+      <p>
+        Si actualizamos esta política de forma relevante, te lo vamos a avisar por mail o dentro de la app.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="font-semibold text-slate-900 mb-2">Contacto</h2>
+      <p>
+        Cualquier consulta sobre privacidad o tus datos personales, escribinos a
+        <a href="mailto:musicsincetomorrow@gmail.com" class="text-emerald-700 underline">musicsincetomorrow@gmail.com</a>.
+      </p>
+    </section>
+  </div>
+
+  <a href="index.html" class="inline-block mt-10 text-sm text-slate-400 underline">‹ Volver a ingresos247</a>
+</div>
+
+</body>
+</html>

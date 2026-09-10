@@ -125,9 +125,10 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
 
 - Sin backups automáticos ni protección contra pausa por inactividad — está en el plan
   Free de Supabase. Subir a Pro ($25 USD/mes) antes de depender de esto con clientes reales.
-- Sin política de privacidad ni términos de uso. Relevante por la Ley 25.326 (Argentina) —
-  no hay piso de usuarios que active la obligación, aplica desde el primer cliente que no
-  sea un conocido cercano.
+- Política de privacidad (`privacidad.html`) y términos y condiciones (`terminos.html`) ya
+  existen, linkeados desde la landing y el registro. Contacto: `musicsincetomorrow@gmail.com`.
+  Redactados en base a la Ley 25.326 (Argentina) — no son un documento revisado por un
+  abogado, sirven como piso razonable, no como garantía legal completa.
 - Meta tags Open Graph pendientes (cómo se ve el link al compartirlo).
 - Accesibilidad: `maximum-scale=1` en el viewport bloquea el zoom (mal para baja visión),
   faltan `aria-label` en botones de ícono (las "×" de borrar), y falta anillo de foco visible
