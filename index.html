@@ -583,16 +583,21 @@
           <!-- Chips de categoría -->
           <div class="flex flex-wrap gap-2 mb-3">
             <template x-for="cat in categoriasActuales" :key="cat.id">
-              <span class="inline-flex items-center gap-1">
-                <button @click="!editandoCategorias && (categoria = cat.nombre)"
-                  class="px-3 h-9 rounded-full text-sm font-medium border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-400"
-                  :class="categoria === cat.nombre
-                    ? (tipo === 'ingreso' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-rose-600 text-white border-rose-600')
-                    : 'bg-slate-50 text-slate-700 border-slate-200'"
-                  x-text="cat.nombre"></button>
-                <button x-show="editandoCategorias" x-cloak @click="eliminarCategoria(cat)" :aria-label="'Eliminar categoría ' + cat.nombre"
-                  class="w-6 h-6 rounded-full bg-slate-200 text-slate-500 text-xs leading-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">×</button>
-              </span>
+              <div class="flex flex-col items-start gap-0.5">
+                <span class="inline-flex items-center gap-1">
+                  <button @click="!editandoCategorias && seleccionarCategoria(cat)"
+                    class="px-3 h-9 rounded-full text-sm font-medium border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-400"
+                    :class="categoria === cat.nombre
+                      ? (tipo === 'ingreso' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-rose-600 text-white border-rose-600')
+                      : 'bg-slate-50 text-slate-700 border-slate-200'"
+                    x-text="cat.nombre"></button>
+                  <button x-show="editandoCategorias" x-cloak @click="eliminarCategoria(cat)" :aria-label="'Eliminar categoría ' + cat.nombre"
+                    class="w-6 h-6 rounded-full bg-slate-200 text-slate-500 text-xs leading-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">×</button>
+                </span>
+                <span x-show="cat.limite" x-cloak class="text-[11px] pl-1"
+                  :class="totalGastadoCategoria(cat.nombre) >= cat.limite ? 'text-rose-600 font-medium' : 'text-slate-400'"
+                  x-text="'$' + formatMonto(totalGastadoCategoria(cat.nombre)) + ' / $' + formatMonto(cat.limite)"></span>
+              </div>
             </template>
           </div>
 
@@ -602,6 +607,10 @@
               class="flex-1 h-10 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400">
             <button @click="agregarCategoria()" class="px-4 h-10 rounded-xl bg-slate-900 text-white text-sm font-medium">Agregar</button>
           </div>
+
+          <input x-show="tipo === 'gasto' && categoria" x-cloak type="text" inputmode="decimal" x-model="limiteInput"
+            @change="guardarLimite()" placeholder="Límite mensual para esta categoría (opcional)"
+            class="w-full h-11 px-4 mb-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
 
           <input type="text" x-model="detalle" placeholder="Detalle (opcional)"
             class="w-full h-11 px-4 mb-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-slate-400">

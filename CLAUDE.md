@@ -1,7 +1,7 @@
 # Ingresos247
 
 App web de control de gastos e ingresos, vendida como servicio mensual ($16.000 ARS/mes,
-con 5 días de prueba gratis). Sitio estático (HTML + Alpine.js + Tailwind vía CDN) sobre
+con 5 días de prueba gratis). Sitio estático (HTML + Alpine.js + Tailwind) sobre
 Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio propio
 `ingresos247.com`.
 

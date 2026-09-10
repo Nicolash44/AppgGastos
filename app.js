@@ -201,6 +201,7 @@ function gastosApp() {
     categorias: { ingreso: [], gasto: [] },
     editandoCategorias: false,
     nuevaCategoria: "",
+    limiteInput: "",
 
     // --- comparativo de meses ---
     mostrarComparacion: false,
@@ -346,6 +347,7 @@ function gastosApp() {
     setTipo(t) {
       this.tipo = t;
       this.categoria = "";
+      this.limiteInput = "";
     },
 
     async logout() {
@@ -516,6 +518,32 @@ function gastosApp() {
       if (!confirm(`¿Eliminar la categoría "${cat.nombre}"? Los movimientos ya cargados con esta categoría no se modifican.`)) return;
       const { error } = await supabaseClient.from("categorias").delete().eq("id", cat.id);
       if (!error) await this.cargarCategorias();
+    },
+
+    seleccionarCategoria(cat) {
+      this.categoria = cat.nombre;
+      this.limiteInput = cat.limite != null ? String(cat.limite) : "";
+    },
+
+    // Límite mensual opcional por categoría de gasto — solo informativo, no bloquea
+    // nada. Se guarda apenas se sale del campo (no hace falta un botón aparte).
+    async guardarLimite() {
+      const cat = this.categorias.gasto.find(c => c.nombre === this.categoria);
+      if (!cat) return;
+
+      const valor = this.limiteInput.trim() === "" ? null : parseFloat(this.limiteInput);
+      const { error } = await supabaseClient
+        .from("categorias")
+        .update({ limite: valor })
+        .eq("id", cat.id);
+
+      if (!error) cat.limite = valor;
+    },
+
+    totalGastadoCategoria(nombre) {
+      return this.movimientos
+        .filter(m => m.tipo === "gasto" && m.categoria === nombre)
+        .reduce((s, m) => s + Number(m.monto), 0);
     },
 
     // ==================== MES ACTUAL / MOVIMIENTOS ====================
