@@ -1,0 +1,104 @@
+// Crea o cancela la suscripción de Mercado Pago del usuario que llama. La invoca la
+// app logueada (supabaseClient.functions.invoke), con verificación de JWT de Supabase
+// activada por default (no hay que tocar nada de eso en el dashboard).
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN")!;
+const MP_PRECIO_MENSUAL = Number(Deno.env.get("MP_PRECIO_MENSUAL") ?? "16000");
+// Adónde vuelve el usuario después de autorizar el pago en Mercado Pago.
+const SITE_URL = Deno.env.get("SITE_URL") ?? "https://ingresos247.com/";
+
+const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+
+Deno.serve(async (req) => {
+  try {
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const jwt = authHeader.replace("Bearer ", "");
+    const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(jwt);
+
+    if (userError || !userData?.user) {
+      return new Response(JSON.stringify({ error: "no autorizado" }), { status: 401 });
+    }
+    const user = userData.user;
+
+    const { action } = await req.json();
+
+    if (action === "crear") {
+      const backUrl = SITE_URL + (SITE_URL.includes("?") ? "&" : "?") + "suscripcion=pendiente";
+
+      const mpRes = await fetch("https://api.mercadopago.com/preapproval", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${MP_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reason: "Ingresos247 - suscripción mensual",
+          external_reference: user.id,
+          payer_email: user.email,
+          back_url: backUrl,
+          auto_recurring: {
+            frequency: 1,
+            frequency_type: "months",
+            transaction_amount: MP_PRECIO_MENSUAL,
+            currency_id: "ARS",
+          },
+        }),
+      });
+
+      const mpData = await mpRes.json();
+
+      if (!mpRes.ok || !mpData.init_point) {
+        console.error("error creando preapproval:", mpData);
+        return new Response(JSON.stringify({ error: "no se pudo crear la suscripción" }), { status: 200 });
+      }
+
+      await supabaseAdmin
+        .from("perfiles")
+        .update({ mp_preapproval_id: mpData.id })
+        .eq("user_id", user.id);
+
+      return new Response(JSON.stringify({ init_point: mpData.init_point }), { status: 200 });
+    }
+
+    if (action === "cancelar") {
+      const { data: perfil, error: perfilError } = await supabaseAdmin
+        .from("perfiles")
+        .select("mp_preapproval_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (perfilError || !perfil?.mp_preapproval_id) {
+        return new Response(JSON.stringify({ error: "no tenés una suscripción activa" }), { status: 200 });
+      }
+
+      const mpRes = await fetch(`https://api.mercadopago.com/preapproval/${perfil.mp_preapproval_id}`, {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${MP_ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "cancelled" }),
+      });
+
+      if (!mpRes.ok) {
+        console.error("error cancelando preapproval:", await mpRes.text());
+        return new Response(JSON.stringify({ error: "no se pudo cancelar la suscripción" }), { status: 200 });
+      }
+
+      await supabaseAdmin
+        .from("perfiles")
+        .update({ mp_preapproval_id: null })
+        .eq("user_id", user.id);
+
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    }
+
+    return new Response(JSON.stringify({ error: "acción inválida" }), { status: 400 });
+  } catch (e) {
+    console.error(e);
+    return new Response(JSON.stringify({ error: "error interno" }), { status: 200 });
+  }
+});

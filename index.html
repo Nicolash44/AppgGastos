@@ -285,8 +285,16 @@
 <!-- ===================== APP ===================== -->
 <div x-data="gastosApp()" x-init="init()" x-show="session && !$store.auth.recuperando" x-cloak class="max-w-md md:max-w-5xl mx-auto pb-10">
 
+  <!-- Confirmando pago recién hecho con Mercado Pago (volviendo del checkout) -->
+  <div x-show="confirmandoSuscripcion" x-cloak class="min-h-screen flex items-center justify-center px-4">
+    <div class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm text-center">
+      <h1 class="text-lg font-bold text-slate-900 mb-2">Confirmando tu pago…</h1>
+      <p class="text-slate-500 text-sm">Puede tardar unos segundos. No cierres esta pantalla.</p>
+    </div>
+  </div>
+
   <!-- Pantalla de pago: bloqueo total al vencer el trial, o abierta a mano desde el aviso -->
-  <div x-show="bloqueado || mostrarPago" x-cloak class="min-h-screen flex items-center justify-center px-4">
+  <div x-show="(bloqueado || mostrarPago) && !confirmandoSuscripcion" x-cloak class="min-h-screen flex items-center justify-center px-4">
     <div class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm text-center">
       <button x-show="!bloqueado" @click="mostrarPago = false" class="text-sm text-slate-400 mb-4">‹ Volver</button>
 
@@ -305,23 +313,52 @@
         </svg>
       </div>
       <h1 class="text-lg font-bold text-slate-900 mb-2" x-text="bloqueado ? (perfil.pagado_hasta ? 'Tu suscripción venció' : 'Tu prueba gratuita terminó') : 'Activar cuenta'"></h1>
-      <p class="text-slate-500 text-sm mb-4">Transferí $16.000/mes a este alias y avisame acá abajo:</p>
 
-      <div class="bg-slate-50 rounded-xl py-3 px-4 mb-2 flex items-center justify-center gap-2">
-        <span class="font-mono font-semibold text-slate-900" x-text="aliasPago"></span>
-      </div>
-      <button @click="copiarAlias()" class="text-xs text-emerald-700 underline mb-6">Copiar alias</button>
-
-      <template x-if="perfil && !perfil.pago_solicitado">
-        <button @click="marcarPagoTransferido()"
-          class="block w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base active:bg-emerald-700 mb-3">
-          Ya transferí
-        </button>
-      </template>
-      <template x-if="perfil && perfil.pago_solicitado">
-        <p class="text-emerald-700 text-sm mb-3">Aviso enviado. Ya podés seguir usando la app mientras lo confirmo (hasta 24hs).</p>
+      <template x-if="perfil && perfil.mp_preapproval_id">
+        <div class="mb-4">
+          <p class="text-slate-500 text-sm mb-4">Tenés una suscripción activa con Mercado Pago.</p>
+          <button @click="cancelarSuscripcionMP()" :disabled="procesandoMP"
+            class="block w-full h-12 rounded-xl border border-rose-200 text-rose-600 font-semibold text-base active:bg-rose-50 disabled:opacity-40 mb-3">
+            Cancelar suscripción
+          </button>
+        </div>
       </template>
 
+      <template x-if="perfil && !perfil.mp_preapproval_id">
+        <div>
+          <p class="text-slate-500 text-sm mb-4">Suscribite y pagá con tarjeta, se renueva solo cada mes:</p>
+          <button @click="suscribirseConMP()" :disabled="procesandoMP"
+            class="block w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base active:bg-emerald-700 disabled:opacity-40 mb-4">
+            <span x-show="!procesandoMP">Suscribirme con Mercado Pago</span>
+            <span x-show="procesandoMP" x-cloak>Redirigiendo…</span>
+          </button>
+
+          <button type="button" @click="mostrarTransferencia = !mostrarTransferencia" class="text-xs text-slate-400 underline mb-4">
+            <span x-text="mostrarTransferencia ? 'Ocultar transferencia manual' : '¿Preferís transferir vos mismo?'"></span>
+          </button>
+
+          <div x-show="mostrarTransferencia" x-cloak>
+            <p class="text-slate-500 text-sm mb-4">Transferí $16.000/mes a este alias y avisame acá abajo:</p>
+
+            <div class="bg-slate-50 rounded-xl py-3 px-4 mb-2 flex items-center justify-center gap-2">
+              <span class="font-mono font-semibold text-slate-900" x-text="aliasPago"></span>
+            </div>
+            <button @click="copiarAlias()" class="text-xs text-emerald-700 underline mb-6">Copiar alias</button>
+
+            <template x-if="perfil && !perfil.pago_solicitado">
+              <button @click="marcarPagoTransferido()"
+                class="block w-full h-12 rounded-xl bg-white text-emerald-700 border border-emerald-600 font-semibold text-base active:bg-emerald-50 mb-3">
+                Ya transferí
+              </button>
+            </template>
+            <template x-if="perfil && perfil.pago_solicitado">
+              <p class="text-emerald-700 text-sm mb-3">Aviso enviado. Ya podés seguir usando la app mientras lo confirmo (hasta 24hs).</p>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <p x-show="errorMsg" x-text="errorMsg" class="text-rose-600 text-sm text-center mb-3"></p>
       <button @click="logout()" class="text-sm text-slate-400 underline">Salir</button>
     </div>
   </div>

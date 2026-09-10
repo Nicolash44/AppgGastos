@@ -29,9 +29,9 @@ de gastos requiere trabajo manual repetido cada mes; acá es una vista que ya es
 
 ## Operating Context
 
-- Pago manual: el usuario transfiere a un alias y avisa desde la app ("Ya transferí");
-  el admin confirma el pago a mano desde un panel dentro de la misma app. No hay gateway
-  de pago automático (se descartó explícitamente Mercado Pago por ahora).
+- Dos formas de pagar: suscripción automática con Mercado Pago (débito recurrente con
+  tarjeta, se confirma sola vía webhook) o transferencia manual con aviso desde la app
+  ("Ya transferí") que el admin confirma a mano desde un panel dentro de la misma app.
 - El acceso se corta solo por vencimiento de `pagado_hasta`/trial, evaluado en tiempo real
   vía RLS (`puede_operar()`), sin cron jobs.
 - Mail transaccional (confirmación de cuenta, recuperación de contraseña, aviso de pago
@@ -73,8 +73,9 @@ uso ni métricas de uso real para citar. No inventar evidencia de ese tipo en tr
   previos ni configuración obligatoria.
 - La comparación mes a mes es el producto, no un extra — cualquier cambio de UI no debería
   esconder ni complicar esa vista.
-- Confianza vía transparencia y control humano: pago manual con confirmación humana, RLS
-  explícito, sin dark patterns de suscripción.
+- Confianza vía transparencia y control: confirmación automática vía Mercado Pago o
+  humana vía transferencia manual (a elección del usuario), RLS explícito, sin dark
+  patterns de suscripción — cancelar la suscripción de Mercado Pago es un solo botón.
 - Simplicidad técnica deliberada: sin build system; cada cambio se prueba abriendo el
   archivo o vía GitHub Pages.
 - Es un servicio con soporte personal, no solo software — el trato humano (confirmar pagos,

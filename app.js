@@ -171,9 +171,12 @@ const ADMIN_USER_ID = "ee15e501-77cf-4201-b322-331af1337edd";
 function gastosApp() {
   return {
     session: null,
-    perfil: null, // { trial_inicio, pagado_hasta, pago_solicitado } | null mientras carga
+    perfil: null, // { trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id } | null mientras carga
     aliasPago: ALIAS_PAGO,
     mostrarPago: false,
+    mostrarTransferencia: false,
+    procesandoMP: false,
+    confirmandoSuscripcion: false,
     mostrarAdmin: false,
     usuariosAdmin: [],
     tipo: "gasto",
@@ -283,6 +286,23 @@ function gastosApp() {
 
     async arrancar() {
       await this.cargarPerfil();
+
+      // Volvió del checkout de Mercado Pago: el webhook puede tardar unos segundos
+      // en acreditar, así que reintentamos un rato antes de mostrar bloqueo.
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("suscripcion") === "pendiente") {
+        params.delete("suscripcion");
+        const nuevaUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
+        window.history.replaceState({}, "", nuevaUrl);
+
+        this.confirmandoSuscripcion = true;
+        for (let intento = 0; intento < 5 && !this.pagoVigente(); intento++) {
+          await new Promise(r => setTimeout(r, 3000));
+          await this.cargarPerfil();
+        }
+        this.confirmandoSuscripcion = false;
+      }
+
       if (this.bloqueado) { this.cargandoInicial = false; return; } // no cargar nada más si la cuenta está bloqueada
       await this.cargarDatosApp();
     },
@@ -317,7 +337,7 @@ function gastosApp() {
     async cargarPerfil() {
       const { data, error } = await supabaseClient
         .from("perfiles")
-        .select("trial_inicio, pagado_hasta, pago_solicitado")
+        .select("trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id")
         .single();
       if (!error) this.perfil = data;
     },
@@ -330,6 +350,40 @@ function gastosApp() {
         // la gracia de 24hs recién ahora lo desbloquea: si no había cargado datos
         // todavía (estaba en la pantalla de bloqueo), hay que cargarlos.
         if (estabaBloqueado && !this.bloqueado) await this.cargarDatosApp();
+      }
+    },
+
+    async suscribirseConMP() {
+      this.errorMsg = "";
+      this.procesandoMP = true;
+      try {
+        const { data, error } = await supabaseClient.functions.invoke("mp-suscripcion", {
+          body: { action: "crear" }
+        });
+        if (error || !data?.init_point) {
+          this.errorMsg = "No se pudo iniciar la suscripción. Intentá de nuevo.";
+          return;
+        }
+        window.location.href = data.init_point;
+      } finally {
+        this.procesandoMP = false;
+      }
+    },
+
+    async cancelarSuscripcionMP() {
+      if (!confirm("¿Cancelar la suscripción de Mercado Pago? Vas a seguir teniendo acceso hasta que venza lo ya pagado.")) return;
+      this.procesandoMP = true;
+      try {
+        const { data, error } = await supabaseClient.functions.invoke("mp-suscripcion", {
+          body: { action: "cancelar" }
+        });
+        if (error || data?.error) {
+          this.errorMsg = "No se pudo cancelar la suscripción. Intentá de nuevo.";
+          return;
+        }
+        this.perfil = { ...this.perfil, mp_preapproval_id: null };
+      } finally {
+        this.procesandoMP = false;
       }
     },
 

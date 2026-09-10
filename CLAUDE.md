@@ -38,6 +38,26 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
 ## Modelo de negocio y cómo funciona el acceso
 
 - Un solo plan, $16.000/mes, 5 días de prueba gratis al registrarse.
+- **Dos formas de pagar, conviven las dos**: suscripción automática con Mercado Pago
+  (débito recurrente con tarjeta) o transferencia manual + confirmación a mano. En la
+  pantalla de pago, Mercado Pago es la opción principal; la transferencia queda detrás
+  de un link "¿Preferís transferir vos mismo?".
+- **Mercado Pago** (`007_mercadopago.sql`, `supabase/functions/mp-suscripcion/`,
+  `supabase/functions/mp-webhook/`): usa el modelo Preapproval (suscripción mensual).
+  `mp-suscripcion` la llama la app logueada para crear (`action: "crear"`, devuelve un
+  `init_point` al que se redirige al usuario) o cancelar (`action: "cancelar"`) la
+  suscripción. `mp-webhook` es pública (Mercado Pago la llama sin auth de Supabase — su
+  "Verify JWT" está desactivado a mano en el dashboard) y **nunca confía en el payload
+  que le mandan**: vuelve a pedirle el recurso real a la API de Mercado Pago con el id
+  que llega, y recién ahí extiende `pagado_hasta` con la misma fórmula que ya usaba
+  `confirmar_pago()`. La tabla `pagos_mp` guarda los `payment_id` ya procesados para no
+  duplicar meses si Mercado Pago reenvía la misma notificación. No hace falta tocar
+  `puede_operar()` para nada de esto — ya evalúa `pagado_hasta`.
+- Secretos de Edge Functions para Mercado Pago (Supabase → Edge Functions → Secrets):
+  `MP_ACCESS_TOKEN` (nunca en el repo) y opcionalmente `MP_PRECIO_MENSUAL` (default
+  16000 si no está seteado). Si el precio del plan cambia, hay que actualizarlo ahí
+  además de en los 3 lugares de `index.html` que lo muestran como texto — no hay una
+  única fuente de verdad para el precio todavía.
 - Pago manual: el cliente transfiere a un alias (`ALIAS_PAGO` en `app.js`) y toca
   "Ya transferí" en la app. Esto llama a la función `solicitar_pago()` en Supabase, que
   guarda `pago_solicitado` en la tabla `perfiles` — **no marca el pago como confirmado
@@ -71,9 +91,15 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
   antes de hacer nada — están otorgadas (`grant execute`) a `authenticated` porque el
   panel de admin las llama desde el cliente, pero la función revienta con excepción si
   quien llama no es el UUID admin. No sacar ese chequeo.
-- **La `service_role key` de Supabase nunca va en ningún archivo de este repo.** Solo la
-  usa la Edge Function `notificar-pago`, como variable de entorno (`SUPABASE_SERVICE_ROLE_KEY`),
-  que Supabase inyecta sola — nunca hace falta pegarla en código.
+- **La `service_role key` de Supabase nunca va en ningún archivo de este repo.** La usan
+  las Edge Functions `notificar-pago`, `mp-suscripcion` y `mp-webhook`, como variable de
+  entorno (`SUPABASE_SERVICE_ROLE_KEY`), que Supabase inyecta sola — nunca hace falta
+  pegarla en código. Lo mismo aplica a `MP_ACCESS_TOKEN`: solo vive como secreto de
+  Edge Function, nunca en `app.js`/`config.js` ni en ningún archivo versionado.
+- **`mp-webhook` nunca confía en lo que le manda Mercado Pago directamente** — siempre
+  vuelve a pedirle el recurso (pago o suscripción) a la API de MP con el id recibido
+  antes de tocar la base. Sin eso, cualquiera podría simular una notificación falsa y
+  activarse el acceso sin pagar. No sacar ese re-chequeo al tocar esa función.
 - Los foreign keys de `transacciones`, `categorias` y `perfiles` hacia `auth.users` tienen
   `on delete cascade` (ver `002b_fix_cascade_delete.sql`) — sin eso, borrar un usuario de
   prueba desde el dashboard tira error.
@@ -86,9 +112,12 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
   en la base real; están acá como documentación y para levantar una base nueva desde cero
   si hiciera falta (ej. un ambiente de test separado). No hay migration runner conectado —
   correrlas es copiar y pegar en el SQL Editor de Supabase a mano.
-- `/supabase/functions/notificar-pago/` — código de la Edge Function. Si se edita, hay que
-  volver a pegar el contenido en el editor de Supabase (Edge Functions → notificar-pago) o
-  desplegar por CLI — este repo no tiene deploy automático configurado hacia Supabase.
+- `/supabase/functions/notificar-pago/`, `/supabase/functions/mp-suscripcion/` y
+  `/supabase/functions/mp-webhook/` — código de las Edge Functions. Si se editan, hay que
+  volver a pegar el contenido en el editor de Supabase (Edge Functions → la función que
+  corresponda) o desplegar por CLI — este repo no tiene deploy automático configurado
+  hacia Supabase. `mp-webhook` además necesita tener "Verify JWT" desactivado a mano en
+  su configuración del dashboard (Mercado Pago la llama sin token de Supabase).
 - `/supabase/email-templates/` — referencia de las plantillas de mail. Ídem: cambiarlas acá
   no cambia nada hasta que se pegan a mano en el dashboard.
 
@@ -103,8 +132,9 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
 - Accesibilidad: `maximum-scale=1` en el viewport bloquea el zoom (mal para baja visión),
   faltan `aria-label` en botones de ícono (las "×" de borrar), y falta anillo de foco visible
   en chips/toggles para navegación por teclado.
-- Sin Mercado Pago ni ningún gateway de pago real — se decidió explícitamente transferencia
-  manual + confirmación manual, no asumir que hay que migrar a eso sin que se pida.
+- Mercado Pago está integrado con credenciales de **prueba** (sandbox) hasta validar el
+  flujo completo con una tarjeta de prueba. No pasar a las credenciales de producción
+  (`MP_ACCESS_TOKEN`) sin haber probado alta, primer pago y cancelación de punta a punta.
 
 ## Convenciones de este proyecto
 
