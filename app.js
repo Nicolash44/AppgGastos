@@ -511,6 +511,12 @@ function gastosApp() {
       if (!error) {
         this.nuevaCategoria = "";
         await this.cargarCategorias();
+        // La deja lista para usar: si no, quedaba creada pero sin seleccionar (los
+        // clics en las burbujas están desactivados mientras se edita), y el
+        // movimiento se terminaba guardando con la categoría anterior por error.
+        this.editandoCategorias = false;
+        this.categoria = nombre;
+        this.limiteInput = "";
       }
     },
 
