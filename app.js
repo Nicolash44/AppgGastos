@@ -176,6 +176,7 @@ function gastosApp() {
     mostrarPago: false,
     mostrarTransferencia: false,
     procesandoMP: false,
+    mpInitPoint: null,
     confirmandoSuscripcion: false,
     mostrarAdmin: false,
     usuariosAdmin: [],
@@ -355,6 +356,7 @@ function gastosApp() {
 
     async suscribirseConMP() {
       this.errorMsg = "";
+      this.mpInitPoint = null;
       this.procesandoMP = true;
       try {
         const { data, error } = await supabaseClient.functions.invoke("mp-suscripcion", {
@@ -364,7 +366,11 @@ function gastosApp() {
           this.errorMsg = "No se pudo iniciar la suscripción. Intentá de nuevo.";
           return;
         }
-        window.location.href = data.init_point;
+        // No redirigimos solos con window.location: algunos navegadores (ej. la
+        // protección "Tracking Prevention" de Edge) bloquean una navegación
+        // programática que llega después de un fetch async. Mostramos un link real
+        // para que el usuario lo clickee — eso ningún navegador lo bloquea.
+        this.mpInitPoint = data.init_point;
       } finally {
         this.procesandoMP = false;
       }

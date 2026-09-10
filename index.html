@@ -327,11 +327,17 @@
       <template x-if="perfil && !perfil.mp_preapproval_id">
         <div>
           <p class="text-slate-500 text-sm mb-4">Suscribite y pagá con tarjeta, se renueva solo cada mes:</p>
-          <button @click="suscribirseConMP()" :disabled="procesandoMP"
+
+          <button x-show="!mpInitPoint" @click="suscribirseConMP()" :disabled="procesandoMP"
             class="block w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base active:bg-emerald-700 disabled:opacity-40 mb-4">
             <span x-show="!procesandoMP">Suscribirme con Mercado Pago</span>
-            <span x-show="procesandoMP" x-cloak>Redirigiendo…</span>
+            <span x-show="procesandoMP" x-cloak>Un momento…</span>
           </button>
+
+          <a x-show="mpInitPoint" x-cloak :href="mpInitPoint"
+            class="block w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-base active:bg-emerald-700 mb-4 flex items-center justify-center">
+            Continuar en Mercado Pago →
+          </a>
 
           <button type="button" @click="mostrarTransferencia = !mostrarTransferencia" class="text-xs text-slate-400 underline mb-4">
             <span x-text="mostrarTransferencia ? 'Ocultar transferencia manual' : '¿Preferís transferir vos mismo?'"></span>
