@@ -709,8 +709,7 @@ function gastosApp() {
               "#e11d48", "#f97316", "#eab308", "#059669", "#06b6d4",
               "#0ea5e9", "#8b5cf6", "#ec4899", "#64748b", "#84cc16", "#14b8a6"
             ],
-            borderWidth: 1,
-            borderColor: "#fff"
+            borderWidth: 0
           }]
         },
         options: {
