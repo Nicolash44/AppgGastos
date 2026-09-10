@@ -18,7 +18,7 @@
     }
   };
 </script>
-<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -42,12 +42,24 @@
 <body class="bg-slate-50 min-h-screen font-sans">
 
 <!-- Spinner visible desde el primer instante, sin depender de que bajen Tailwind/Alpine/etc.
-     Se saca solo apenas Alpine termina de inicializar los componentes de la página. -->
-<div id="app-loader"><div class="spinner"></div></div>
+     Se saca solo apenas Alpine termina de inicializar los componentes de la página. Si a los
+     8 segundos seguimos esperando (ej. el CDN de algún script está bloqueado por la red del
+     usuario), se muestra un aviso en vez de girar en silencio para siempre. -->
+<div id="app-loader">
+  <div class="spinner"></div>
+  <p id="app-loader-aviso" style="display:none; position:absolute; bottom:15%; left:16px; right:16px; text-align:center; color:#64748B; font-family:sans-serif; font-size:14px;">
+    Esto está tardando más de lo normal. Revisá tu conexión a internet y recargá la página.
+    Si tenés un bloqueador de anuncios o rastreadores activo, probá desactivarlo para este sitio.
+  </p>
+</div>
 <script>
   document.addEventListener("alpine:initialized", () => {
     document.getElementById("app-loader")?.remove();
   });
+  setTimeout(() => {
+    const aviso = document.getElementById("app-loader-aviso");
+    if (aviso) aviso.style.display = "block";
+  }, 8000);
 </script>
 
 <!-- ===================== LANDING + LOGIN ===================== -->
