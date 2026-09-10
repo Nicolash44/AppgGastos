@@ -275,17 +275,28 @@ function gastosApp() {
     async init() {
       const { data } = await supabaseClient.auth.getSession();
       this.session = data.session;
-      if (this.session) this.arrancar();
+      if (this.session) this.arrancarUnaVez();
 
       supabaseClient.auth.onAuthStateChange((_event, session) => {
         const teniaSesion = !!this.session;
         this.session = session;
-        if (session && !teniaSesion) this.arrancar();
+        if (session && !teniaSesion) this.arrancarUnaVez();
       });
 
       window.matchMedia("(max-width: 767px)").addEventListener("change", (e) => {
         this.esMobile = e.matches;
       });
+    },
+
+    arrancarUnaVez() {
+      // onAuthStateChange puede avisar la sesión más de una vez (ej. un evento
+      // inicial además del que ya manejamos a mano al arrancar) — sin esta traba,
+      // arrancar() podía terminar corriendo dos veces en paralelo, pisándose una
+      // a la otra al crear los gráficos (de ahí errores raros e inconsistentes
+      // entre dispositivos, tipo "Cannot read properties of null" en Chart.js).
+      if (this._arrancando) return;
+      this._arrancando = true;
+      this.arrancar();
     },
 
     async arrancar() {
