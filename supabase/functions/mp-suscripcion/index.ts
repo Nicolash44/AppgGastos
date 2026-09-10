@@ -12,14 +12,26 @@ const SITE_URL = Deno.env.get("SITE_URL") ?? "https://ingresos247.com/";
 
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+// La app la llama desde el navegador (otro dominio que supabase.co), así que hace
+// falta responder CORS: el preflight OPTIONS y el header en cada respuesta.
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: CORS_HEADERS });
+  }
+
   try {
     const authHeader = req.headers.get("Authorization") ?? "";
     const jwt = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseAdmin.auth.getUser(jwt);
 
     if (userError || !userData?.user) {
-      return new Response(JSON.stringify({ error: "no autorizado" }), { status: 401 });
+      return new Response(JSON.stringify({ error: "no autorizado" }), { status: 401, headers: CORS_HEADERS });
     }
     const user = userData.user;
 
@@ -52,7 +64,7 @@ Deno.serve(async (req) => {
 
       if (!mpRes.ok || !mpData.init_point) {
         console.error("error creando preapproval:", mpData);
-        return new Response(JSON.stringify({ error: "no se pudo crear la suscripción" }), { status: 200 });
+        return new Response(JSON.stringify({ error: "no se pudo crear la suscripción" }), { status: 200, headers: CORS_HEADERS });
       }
 
       await supabaseAdmin
@@ -60,7 +72,7 @@ Deno.serve(async (req) => {
         .update({ mp_preapproval_id: mpData.id })
         .eq("user_id", user.id);
 
-      return new Response(JSON.stringify({ init_point: mpData.init_point }), { status: 200 });
+      return new Response(JSON.stringify({ init_point: mpData.init_point }), { status: 200, headers: CORS_HEADERS });
     }
 
     if (action === "cancelar") {
@@ -71,7 +83,7 @@ Deno.serve(async (req) => {
         .single();
 
       if (perfilError || !perfil?.mp_preapproval_id) {
-        return new Response(JSON.stringify({ error: "no tenés una suscripción activa" }), { status: 200 });
+        return new Response(JSON.stringify({ error: "no tenés una suscripción activa" }), { status: 200, headers: CORS_HEADERS });
       }
 
       const mpRes = await fetch(`https://api.mercadopago.com/preapproval/${perfil.mp_preapproval_id}`, {
@@ -85,7 +97,7 @@ Deno.serve(async (req) => {
 
       if (!mpRes.ok) {
         console.error("error cancelando preapproval:", await mpRes.text());
-        return new Response(JSON.stringify({ error: "no se pudo cancelar la suscripción" }), { status: 200 });
+        return new Response(JSON.stringify({ error: "no se pudo cancelar la suscripción" }), { status: 200, headers: CORS_HEADERS });
       }
 
       await supabaseAdmin
@@ -93,12 +105,12 @@ Deno.serve(async (req) => {
         .update({ mp_preapproval_id: null })
         .eq("user_id", user.id);
 
-      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      return new Response(JSON.stringify({ ok: true }), { status: 200, headers: CORS_HEADERS });
     }
 
-    return new Response(JSON.stringify({ error: "acción inválida" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "acción inválida" }), { status: 400, headers: CORS_HEADERS });
   } catch (e) {
     console.error(e);
-    return new Response(JSON.stringify({ error: "error interno" }), { status: 200 });
+    return new Response(JSON.stringify({ error: "error interno" }), { status: 200, headers: CORS_HEADERS });
   }
 });
