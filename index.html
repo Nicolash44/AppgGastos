@@ -583,11 +583,9 @@
           <!-- Chips de categoría -->
           <div class="flex flex-wrap gap-2 mb-3">
             <template x-for="cat in categoriasActuales" :key="cat.id">
-              <span class="inline-flex items-center gap-1">
+              <span class="relative inline-flex items-center gap-1" x-data="{ mostrarTip: false }">
                 <button @click="!editandoCategorias && seleccionarCategoria(cat)"
-                  :title="cat.limite ? (totalGastadoCategoria(cat.nombre) >= cat.limite
-                    ? 'Te excediste $' + formatMonto(totalGastadoCategoria(cat.nombre) - cat.limite) + ' de tu límite establecido $' + formatMonto(cat.limite)
-                    : 'Llevás $' + formatMonto(totalGastadoCategoria(cat.nombre)) + ' de tu límite establecido $' + formatMonto(cat.limite)) : null"
+                  @mouseenter="mostrarTip = true" @mouseleave="mostrarTip = false"
                   class="px-3 h-9 rounded-full text-sm font-medium border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-400"
                   :class="[
                     categoria === cat.nombre
@@ -598,6 +596,17 @@
                   x-text="cat.nombre"></button>
                 <button x-show="editandoCategorias" x-cloak @click="eliminarCategoria(cat)" :aria-label="'Eliminar categoría ' + cat.nombre"
                   class="w-6 h-6 rounded-full bg-slate-200 text-slate-500 text-xs leading-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">×</button>
+
+                <!-- Tooltip propio (en vez del feo tooltip nativo del navegador) -->
+                <div x-show="cat.limite && mostrarTip" x-cloak x-transition.opacity.duration.150ms
+                  class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[220px] px-3 py-2 rounded-xl bg-slate-900 text-white text-xs font-medium shadow-[0_4px_16px_rgba(15,23,42,0.25)] z-20 text-center pointer-events-none"
+                  :class="totalGastadoCategoria(cat.nombre) >= cat.limite ? 'text-rose-200' : ''"
+                  x-text="totalGastadoCategoria(cat.nombre) >= cat.limite
+                    ? 'Te excediste $' + formatMonto(totalGastadoCategoria(cat.nombre) - cat.limite) + ' de tu límite establecido $' + formatMonto(cat.limite)
+                    : 'Llevás $' + formatMonto(totalGastadoCategoria(cat.nombre)) + ' de tu límite establecido $' + formatMonto(cat.limite)">
+                </div>
+                <div x-show="cat.limite && mostrarTip" x-cloak
+                  class="absolute bottom-full left-1/2 -translate-x-1/2 mb-[3px] w-2.5 h-2.5 bg-slate-900 rotate-45 z-20 pointer-events-none"></div>
               </span>
             </template>
           </div>
