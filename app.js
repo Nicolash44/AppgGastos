@@ -237,6 +237,13 @@ function gastosApp() {
       if (!this.perfil || !this.perfil.pagado_hasta) return false;
       return new Date(this.perfil.pagado_hasta) > new Date();
     },
+    // 24hs de gracia desde que avisó "Ya transferí", mientras el admin confirma a mano.
+    enGracia() {
+      if (!this.perfil || !this.perfil.pago_solicitado) return false;
+      const vence = new Date(this.perfil.pago_solicitado);
+      vence.setHours(vence.getHours() + 24);
+      return vence > new Date();
+    },
     get diasRestantesTrial() {
       if (!this.perfil || this.pagoVigente()) return null;
       const vence = new Date(this.perfil.trial_inicio);
@@ -251,7 +258,7 @@ function gastosApp() {
     },
     get bloqueado() {
       if (!this.perfil) return false; // todavía no cargó: no mostrar bloqueo de arranque
-      if (this.pagoVigente()) return false;
+      if (this.pagoVigente() || this.enGracia()) return false;
       return this.diasRestantesTrial === 0;
     },
     get esAdmin() {
@@ -277,7 +284,10 @@ function gastosApp() {
     async arrancar() {
       await this.cargarPerfil();
       if (this.bloqueado) { this.cargandoInicial = false; return; } // no cargar nada más si la cuenta está bloqueada
+      await this.cargarDatosApp();
+    },
 
+    async cargarDatosApp() {
       this.mostrarComparacion = !this.esMobile;
       await this.cargarCategorias();
       this.setTipo("gasto");
@@ -313,9 +323,13 @@ function gastosApp() {
     },
 
     async marcarPagoTransferido() {
+      const estabaBloqueado = this.bloqueado;
       const { error } = await supabaseClient.rpc("solicitar_pago");
       if (!error) {
         this.perfil = { ...this.perfil, pago_solicitado: new Date().toISOString() };
+        // la gracia de 24hs recién ahora lo desbloquea: si no había cargado datos
+        // todavía (estaba en la pantalla de bloqueo), hay que cargarlos.
+        if (estabaBloqueado && !this.bloqueado) await this.cargarDatosApp();
       }
     },
 

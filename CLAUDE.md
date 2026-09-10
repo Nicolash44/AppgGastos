@@ -48,6 +48,10 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
   vencimiento actual (no desde hoy, para no perder días si alguien paga adelantado).
 - El acceso se corta solo cuando `pagado_hasta` vence y no hay trial activo — lo evalúa
   la función `puede_operar()` en cada policy de RLS, en tiempo real, sin ningún cron job.
+- **Gracia de 24hs tras "Ya transferí"** (`006_gracia_pago_solicitado.sql`): mientras el
+  admin confirma a mano, `puede_operar()` también deja pasar si `pago_solicitado` tiene
+  menos de 24hs, aunque el trial/suscripción ya haya vencido. Se corta sola al llegar las
+  24hs si el admin no confirmó, o antes si `confirmar_pago()` ya limpió `pago_solicitado`.
 - Cuando alguien marca "Ya transferí", un Database Webhook en la tabla `perfiles` dispara
   la Edge Function `notificar-pago` (en `supabase/functions/notificar-pago/`), que busca
   el email real del usuario (vía Admin API) y te manda un mail por Resend. Solo notifica
