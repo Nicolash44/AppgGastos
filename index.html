@@ -55,7 +55,10 @@
 <script>
   function ocultarAppLoader() { document.getElementById("app-loader")?.remove(); }
   document.addEventListener("alpine:initialized", ocultarAppLoader);
-  setTimeout(ocultarAppLoader, 1500);
+  // Red de seguridad más generosa: en hardware viejo/débil, Tailwind generando los
+  // estilos en vivo puede tardar más que esto, y sacar el spinner antes de tiempo
+  // deja ver un instante la página sin terminar de pintar.
+  setTimeout(ocultarAppLoader, 4000);
   setTimeout(() => {
     if (typeof window.Alpine === "undefined") {
       const aviso = document.getElementById("app-loader-aviso");
