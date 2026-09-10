@@ -47,9 +47,13 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          // Sin payer_email a propósito: si va el email real del usuario de la app,
+          // Mercado Pago rechaza la creación en modo prueba porque no es un usuario
+          // de test de MP ("Both payer and collector must be real or test users").
+          // Sin este campo, MP le pide al comprador que inicie sesión en su propio
+          // checkout — funciona igual en modo prueba y en producción.
           reason: "Ingresos247 - suscripción mensual",
           external_reference: user.id,
-          payer_email: user.email,
           back_url: backUrl,
           auto_recurring: {
             frequency: 1,
