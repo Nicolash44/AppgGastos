@@ -105,8 +105,15 @@ Deno.serve(async (req) => {
       });
 
       if (!mpRes.ok) {
-        console.error("error cancelando preapproval:", await mpRes.text());
-        return new Response(JSON.stringify({ error: "no se pudo cancelar la suscripción" }), { status: 200, headers: CORS_HEADERS });
+        const mpErrorText = await mpRes.text();
+        console.error("error cancelando preapproval:", mpErrorText);
+        // Si MP dice que ya estaba cancelada, no es un error real: nuestra base
+        // había quedado desincronizada (ej. de una prueba anterior). El estado
+        // final que queremos (sin suscripción activa) es el mismo, así que
+        // limpiamos igual en vez de mostrar error.
+        if (!mpErrorText.toLowerCase().includes("cancelled")) {
+          return new Response(JSON.stringify({ error: "no se pudo cancelar la suscripción" }), { status: 200, headers: CORS_HEADERS });
+        }
       }
 
       await supabaseAdmin
