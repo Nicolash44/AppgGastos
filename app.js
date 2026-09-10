@@ -355,8 +355,8 @@ function gastosApp() {
     },
 
     async suscribirseConMP() {
+      if (this.procesandoMP || this.mpInitPoint) return; // evita doble click / doble pedido
       this.errorMsg = "";
-      this.mpInitPoint = null;
       this.procesandoMP = true;
       try {
         const { data, error } = await supabaseClient.functions.invoke("mp-suscripcion", {
@@ -388,6 +388,7 @@ function gastosApp() {
           return;
         }
         this.perfil = { ...this.perfil, mp_preapproval_id: null };
+        this.mpInitPoint = null;
       } finally {
         this.procesandoMP = false;
       }
