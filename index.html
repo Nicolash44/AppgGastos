@@ -40,22 +40,23 @@
      todavía (falló la carga de verdad, no es solo el spinner), se avisa aparte. -->
 <div id="app-loader"><div class="spinner"></div></div>
 <p id="app-loader-aviso" style="display:none; position:fixed; bottom:5%; left:16px; right:16px; z-index:9999; text-align:center; color:#64748B; font-family:sans-serif; font-size:14px; background:#F8FAFC; padding:12px; border-radius:12px;">
-  Esto está tardando más de lo normal. Revisá tu conexión a internet y recargá la página.
-  Si tenés un bloqueador de anuncios o rastreadores activo, probá desactivarlo para este sitio.
+  Esto está tardando más de lo normal, pero sigue cargando — esperá unos segundos más
+  antes de recargar la página, porque recargarla la obliga a arrancar de cero otra vez.
 </p>
 <script>
   function ocultarAppLoader() { document.getElementById("app-loader")?.remove(); }
   document.addEventListener("alpine:initialized", ocultarAppLoader);
-  // Red de seguridad más generosa: en hardware viejo/débil, Tailwind generando los
-  // estilos en vivo puede tardar más que esto, y sacar el spinner antes de tiempo
-  // deja ver un instante la página sin terminar de pintar.
   setTimeout(ocultarAppLoader, 4000);
+  // En dispositivos lentos (ej. justo después de volver del login con Google, el
+  // momento de más carga: procesar el token, traer perfil/movimientos/gráficos de
+  // una), Alpine puede tardar bastante en terminar sin haber fallado — solo avisamos
+  // que siga esperando en vez de sugerir recargar, que reinicia todo ese trabajo.
   setTimeout(() => {
     if (typeof window.Alpine === "undefined") {
       const aviso = document.getElementById("app-loader-aviso");
       if (aviso) aviso.style.display = "block";
     }
-  }, 6000);
+  }, 10000);
 </script>
 
 <!-- ===================== LANDING + LOGIN ===================== -->
