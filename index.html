@@ -42,24 +42,26 @@
 <body class="bg-slate-50 min-h-screen font-sans">
 
 <!-- Spinner visible desde el primer instante, sin depender de que bajen Tailwind/Alpine/etc.
-     Se saca solo apenas Alpine termina de inicializar los componentes de la página. Si a los
-     8 segundos seguimos esperando (ej. el CDN de algún script está bloqueado por la red del
-     usuario), se muestra un aviso en vez de girar en silencio para siempre. -->
-<div id="app-loader">
-  <div class="spinner"></div>
-  <p id="app-loader-aviso" style="display:none; position:absolute; bottom:15%; left:16px; right:16px; text-align:center; color:#64748B; font-family:sans-serif; font-size:14px;">
-    Esto está tardando más de lo normal. Revisá tu conexión a internet y recargá la página.
-    Si tenés un bloqueador de anuncios o rastreadores activo, probá desactivarlo para este sitio.
-  </p>
-</div>
+     Se saca apenas Alpine termina de inicializar, O a los 1.5s como red de seguridad —
+     nunca se queda tapando la página para siempre, aunque el evento de Alpine no llegue
+     a dispararse en algún dispositivo (eso pasó: la página cargaba bien abajo pero el
+     spinner se quedaba pegado arriba). Si a los 6 segundos Alpine ni siquiera existe
+     todavía (falló la carga de verdad, no es solo el spinner), se avisa aparte. -->
+<div id="app-loader"><div class="spinner"></div></div>
+<p id="app-loader-aviso" style="display:none; position:fixed; bottom:5%; left:16px; right:16px; z-index:9999; text-align:center; color:#64748B; font-family:sans-serif; font-size:14px; background:#F8FAFC; padding:12px; border-radius:12px;">
+  Esto está tardando más de lo normal. Revisá tu conexión a internet y recargá la página.
+  Si tenés un bloqueador de anuncios o rastreadores activo, probá desactivarlo para este sitio.
+</p>
 <script>
-  document.addEventListener("alpine:initialized", () => {
-    document.getElementById("app-loader")?.remove();
-  });
+  function ocultarAppLoader() { document.getElementById("app-loader")?.remove(); }
+  document.addEventListener("alpine:initialized", ocultarAppLoader);
+  setTimeout(ocultarAppLoader, 1500);
   setTimeout(() => {
-    const aviso = document.getElementById("app-loader-aviso");
-    if (aviso) aviso.style.display = "block";
-  }, 8000);
+    if (typeof window.Alpine === "undefined") {
+      const aviso = document.getElementById("app-loader-aviso");
+      if (aviso) aviso.style.display = "block";
+    }
+  }, 6000);
 </script>
 
 <!-- ===================== LANDING + LOGIN ===================== -->
