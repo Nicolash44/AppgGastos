@@ -18,6 +18,9 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
+  // Sin este Content-Type explícito, supabase-js a veces no interpreta bien el
+  // body como JSON y trata la respuesta como error aunque haya salido todo bien.
+  "Content-Type": "application/json",
 };
 
 Deno.serve(async (req) => {
