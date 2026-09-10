@@ -8,8 +8,15 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
 ## Stack
 
 - **Frontend**: `index.html` + `app.js`, sin build step. Alpine.js para reactividad,
-  Tailwind CSS por CDN, Chart.js para gráficos. `config.js` tiene las credenciales públicas
+  Tailwind CSS, Chart.js para gráficos. `config.js` tiene las credenciales públicas
   de Supabase (URL + anon key — están pensadas para ser públicas, la seguridad real la da RLS).
+- **`/vendor/`**: Alpine, Tailwind (el script del CDN), Supabase JS y Chart.js están
+  bajados y commiteados acá en vez de cargarse desde un CDN externo (`cdn.tailwindcss.com`,
+  `jsdelivr.net`, etc.). Se cambió así porque a un usuario real esos dominios le quedaban
+  bloqueados por su red/operador, dejando la página completamente en blanco sin aviso.
+  Sirven como archivos estáticos comunes, no rompe la regla de "sin build system" — son
+  los mismos archivos, solo que locales. Si hay que actualizar una versión, se vuelve a
+  bajar el archivo a mano y se reemplaza (no hay npm ni lockfile acá).
 - **Backend**: Supabase (Postgres + Auth + Edge Functions). Sin backend propio.
 - **Deploy**: GitHub Pages, rama `main`, carpeta raíz. `CNAME` apunta a `ingresos247.com`.
   DNS en Donweb: 4 registros A a las IPs de GitHub Pages, más los registros de Resend
