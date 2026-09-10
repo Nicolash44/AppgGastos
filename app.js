@@ -714,6 +714,7 @@ function gastosApp() {
         },
         options: {
           responsive: true,
+          animation: false,
           maintainAspectRatio: false,
           plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } } }
         }
@@ -736,6 +737,7 @@ function gastosApp() {
         },
         options: {
           responsive: true,
+          animation: false,
           maintainAspectRatio: false,
           plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } } },
           scales: { y: { beginAtZero: true } }
@@ -823,6 +825,7 @@ function gastosApp() {
         },
         options: {
           responsive: true,
+          animation: false,
           maintainAspectRatio: false,
           plugins: { legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } } },
           scales: { y: { beginAtZero: true } }
