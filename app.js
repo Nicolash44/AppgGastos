@@ -182,6 +182,7 @@ function gastosApp() {
     mostrarPagoPendiente: false,
     mostrarAdmin: false,
     usuariosAdmin: [],
+    busquedaAdmin: "",
     tipo: "gasto",
     categoria: "",
     detalle: "",
@@ -371,6 +372,10 @@ function gastosApp() {
       this.cargandoInicial = false;
       await this.cargarEvolucion();
       await this.cargarComparacion();
+
+      // Para que el ícono de notificaciones tenga el número al toque, sin
+      // tener que abrir el panel de admin primero.
+      if (this.esAdmin) this.cargarUsuariosAdmin();
     },
 
     formatMesInput(d) {
@@ -474,7 +479,19 @@ function gastosApp() {
 
     abrirAdmin() {
       this.mostrarAdmin = true;
+      this.busquedaAdmin = "";
       this.cargarUsuariosAdmin();
+    },
+
+    get usuariosAdminFiltrados() {
+      const q = this.busquedaAdmin.trim().toLowerCase();
+      const lista = q ? this.usuariosAdmin.filter(u => u.email.toLowerCase().includes(q)) : this.usuariosAdmin;
+      // Los que avisaron que transfirieron primero, para no tener que buscarlos entre todos.
+      return [...lista].sort((a, b) => (b.pago_solicitado ? 1 : 0) - (a.pago_solicitado ? 1 : 0));
+    },
+
+    get pagosPendientesCount() {
+      return this.usuariosAdmin.filter(u => u.pago_solicitado).length;
     },
 
     estadoUsuario(u) {
