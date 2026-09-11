@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260911h">
+<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260911i">
 <script defer src="vendor/alpine.min.js"></script>
 <script src="vendor/supabase.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
@@ -409,6 +409,11 @@
           ? (perfil.pagado_hasta ? 'Tu suscripción venció' : 'Tu prueba gratuita terminó')
           : (perfil && (perfil.mp_preapproval_id || pagoVigente()) ? 'Mi suscripción' : 'Activar cuenta')"></h1>
 
+      <p x-show="!bloqueado && diasRestantesPago !== null" class="text-slate-400 text-sm mb-4">
+        Te <span x-text="diasRestantesPago === 1 ? 'queda' : 'quedan'"></span> <span x-text="diasRestantesPago"></span>
+        día<span x-show="diasRestantesPago !== 1">s</span> de suscripción.
+      </p>
+
       <template x-if="perfil && perfil.mp_preapproval_id">
         <div class="mb-4">
           <p class="text-slate-500 text-sm mb-4">Tenés una suscripción activa con Mercado Pago.</p>
@@ -513,7 +518,7 @@
   </div>
 
   <!-- Aviso de suscripción -->
-  <div x-show="diasRestantesPago !== null && diasRestantesPago <= 60" x-cloak class="bg-amber-50 text-amber-700 text-sm text-center py-2 px-4">
+  <div x-show="diasRestantesPago !== null && diasRestantesPago <= 5" x-cloak class="bg-amber-50 text-amber-700 text-sm text-center py-2 px-4">
     Tu suscripción vence en <span x-text="diasRestantesPago"></span> día<span x-show="diasRestantesPago !== 1">s</span> ·
     <span x-show="perfil && !perfil.pago_solicitado"><button @click="mostrarPago = true" class="underline font-medium">renovar ahora</button></span>
     <span x-show="perfil && perfil.pago_solicitado" class="font-medium">aviso enviado</span>
