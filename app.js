@@ -330,6 +330,14 @@ function gastosApp() {
         window.history.replaceState({}, "", window.location.pathname);
 
         this.confirmandoSuscripcion = true;
+
+        // No confiamos solo en el webhook para este primer pago: le preguntamos
+        // directo a Mercado Pago apenas volvemos del checkout (el webhook queda
+        // como respaldo para los pagos recurrentes de los meses siguientes,
+        // cuando el usuario no está mirando la pantalla).
+        await supabaseClient.functions.invoke("mp-suscripcion", { body: { action: "confirmar" } }).catch(() => {});
+        await this.cargarPerfil();
+
         for (let intento = 0; intento < 5 && !this.pagoVigente(); intento++) {
           await new Promise(r => setTimeout(r, 3000));
           await this.cargarPerfil();

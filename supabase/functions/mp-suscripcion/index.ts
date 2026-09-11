@@ -89,6 +89,58 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ init_point: mpData.init_point }), { status: 200, headers: CORS_HEADERS });
     }
 
+    if (action === "confirmar") {
+      // Se llama apenas el usuario vuelve del checkout de Mercado Pago. No
+      // depende del webhook (mp-webhook): en sandbox resultó no ser confiable
+      // para el evento de pagos de suscripción, así que acá le preguntamos
+      // directo a la API de MP por el último pago de esta suscripción y
+      // acreditamos nosotros mismos si ya está aprobado. El webhook sigue
+      // siendo el mecanismo para los pagos recurrentes de los meses
+      // siguientes, cuando no hay nadie mirando la pantalla para este llamado.
+      const { data: perfil, error: perfilError } = await supabaseAdmin
+        .from("perfiles")
+        .select("mp_preapproval_id, pagado_hasta")
+        .eq("user_id", user.id)
+        .single();
+
+      if (perfilError || !perfil?.mp_preapproval_id) {
+        return new Response(JSON.stringify({ confirmado: false }), { status: 200, headers: CORS_HEADERS });
+      }
+
+      const searchRes = await fetch(
+        `https://api.mercadopago.com/authorized_payments/search?preapproval_id=${perfil.mp_preapproval_id}&sort=date_created&criteria=desc`,
+        { headers: { "Authorization": `Bearer ${MP_ACCESS_TOKEN}` } },
+      );
+      const searchData = await searchRes.json();
+      const ultimoPago = searchData?.results?.[0];
+
+      if (!searchRes.ok || !ultimoPago || ultimoPago.payment?.status !== "approved") {
+        return new Response(JSON.stringify({ confirmado: false }), { status: 200, headers: CORS_HEADERS });
+      }
+
+      const paymentId = String(ultimoPago.payment.id);
+      const { error: insertError } = await supabaseAdmin
+        .from("pagos_mp")
+        .insert({ payment_id: paymentId, user_id: user.id });
+
+      if (!insertError) {
+        // Si insertError existe, ya lo había acreditado el webhook (o un
+        // llamado anterior a este mismo action) — no hace falta sumar de nuevo.
+        const base = perfil.pagado_hasta && new Date(perfil.pagado_hasta) > new Date()
+          ? new Date(perfil.pagado_hasta)
+          : new Date();
+        const nuevoVencimiento = new Date(base);
+        nuevoVencimiento.setMonth(nuevoVencimiento.getMonth() + 1);
+
+        await supabaseAdmin
+          .from("perfiles")
+          .update({ pagado_hasta: nuevoVencimiento.toISOString(), pago_solicitado: null })
+          .eq("user_id", user.id);
+      }
+
+      return new Response(JSON.stringify({ confirmado: true }), { status: 200, headers: CORS_HEADERS });
+    }
+
     if (action === "cancelar") {
       const { data: perfil, error: perfilError } = await supabaseAdmin
         .from("perfiles")
