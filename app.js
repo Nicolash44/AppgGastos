@@ -744,12 +744,25 @@ function gastosApp() {
       if (!ctx) return;
       if (this.chartCategorias) this.chartCategorias.destroy();
 
+      const total = Object.values(porCategoria).reduce((s, v) => s + v, 0);
+      if (total === 0) return;
+
+      // De mayor a menor, y las que pesan menos del 5% del total (si hay
+      // más de una) se agrupan en "Otros" para no saturar la leyenda.
+      let entradas = Object.entries(porCategoria).sort((a, b) => b[1] - a[1]);
+      const chicas = entradas.filter(([, monto]) => monto / total < 0.05);
+      if (chicas.length > 1) {
+        const otrosTotal = chicas.reduce((s, [, monto]) => s + monto, 0);
+        entradas = entradas.filter(([, monto]) => monto / total >= 0.05);
+        entradas.push(["Otros", otrosTotal]);
+      }
+
       this.chartCategorias = new Chart(ctx, {
         type: "pie",
         data: {
-          labels: Object.keys(porCategoria),
+          labels: entradas.map(e => e[0]),
           datasets: [{
-            data: Object.values(porCategoria),
+            data: entradas.map(e => e[1]),
             backgroundColor: [
               "#e11d48", "#f97316", "#eab308", "#059669", "#06b6d4",
               "#0ea5e9", "#8b5cf6", "#ec4899", "#64748b", "#84cc16", "#14b8a6"
@@ -761,7 +774,17 @@ function gastosApp() {
           responsive: true,
           animation: false,
           maintainAspectRatio: false,
-          plugins: { legend: { position: "bottom", labels: { boxWidth: 14, boxHeight: 14, padding: 14, font: { size: 13, weight: "500" }, color: "#334155" } } }
+          plugins: {
+            legend: { position: "bottom", labels: { boxWidth: 14, boxHeight: 14, padding: 14, font: { size: 13, weight: "500" }, color: "#334155" } },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => {
+                  const pct = total > 0 ? (ctx.parsed / total * 100).toFixed(0) : 0;
+                  return `${ctx.label}: $${this.formatMonto(ctx.parsed)} (${pct}%)`;
+                }
+              }
+            }
+          }
         }
       });
     },
