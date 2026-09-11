@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260911d">
+<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260911e">
 <script defer src="vendor/alpine.min.js"></script>
 <script src="vendor/supabase.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
@@ -708,7 +708,7 @@
                 </svg>
               </button>
               <div x-show="ayudaAbierta" x-cloak x-transition.opacity.duration.150ms @click.outside="ayudaAbierta = false"
-                class="absolute z-30 top-full left-1/2 -translate-x-1/2 mt-2 w-56 max-w-[85vw] rounded-xl bg-slate-900 text-white text-xs leading-relaxed p-3 pr-8 shadow-[0_4px_16px_rgba(15,23,42,0.25)]">
+                class="absolute z-30 top-full right-0 mt-2 w-56 max-w-[85vw] rounded-xl bg-slate-900 text-white text-xs leading-relaxed p-3 pr-8 shadow-[0_4px_16px_rgba(15,23,42,0.25)]">
                 Compará dos meses entre sí, con o sin filtro de categoría, para ver bien en qué cambiaste.
                 <button type="button" @click="ayudaAbierta = false" aria-label="Cerrar ayuda"
                   class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition">
