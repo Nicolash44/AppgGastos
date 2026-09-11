@@ -42,6 +42,10 @@ Deno.serve(async (req) => {
 
     if (action === "crear") {
       const backUrl = SITE_URL + (SITE_URL.includes("?") ? "&" : "?") + "suscripcion=pendiente";
+      // Sin esto, Mercado Pago no manda los webhooks de "subscription_authorized_payment"
+      // de esta suscripción puntual aunque haya una URL configurada a nivel cuenta en el
+      // dashboard — para Preapproval hay que pasarla explícita en la creación.
+      const notificationUrl = `${SUPABASE_URL}/functions/v1/mp-webhook`;
 
       const mpRes = await fetch("https://api.mercadopago.com/preapproval", {
         method: "POST",
@@ -60,6 +64,7 @@ Deno.serve(async (req) => {
           external_reference: user.id,
           payer_email: user.email,
           back_url: backUrl,
+          notification_url: notificationUrl,
           auto_recurring: {
             frequency: 1,
             frequency_type: "months",
