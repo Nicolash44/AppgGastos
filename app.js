@@ -188,6 +188,8 @@ function gastosApp() {
     monto: "",
     movimientos: [],
     movAEliminar: null,
+    editandoMovId: null,
+    evolucionVacia: false,
     errorMsg: "",
     guardando: false,
     cargandoInicial: true,
@@ -203,6 +205,7 @@ function gastosApp() {
     editandoCategorias: false,
     nuevaCategoria: "",
     limiteInput: "",
+    mostrarTodasCategorias: false,
 
     // --- comparativo de meses ---
     mostrarComparacion: false,
@@ -217,6 +220,18 @@ function gastosApp() {
 
     get categoriasActuales() {
       return this.categorias[this.tipo];
+    },
+    // Las más usadas este mes primero, para no forzar a escanear una fila
+    // larga de chips cada vez que se carga un movimiento.
+    get categoriasOrdenadas() {
+      const usos = {};
+      this.movimientos.forEach(m => {
+        if (m.tipo === this.tipo) usos[m.categoria] = (usos[m.categoria] || 0) + 1;
+      });
+      return [...this.categoriasActuales].sort((a, b) => (usos[b.nombre] || 0) - (usos[a.nombre] || 0));
+    },
+    get categoriasVisibles() {
+      return this.mostrarTodasCategorias ? this.categoriasOrdenadas : this.categoriasOrdenadas.slice(0, 8);
     },
     get categoriasCompActuales() {
       return this.categorias[this.compTipo];
@@ -341,14 +356,20 @@ function gastosApp() {
     async cargarDatosApp() {
       this.mostrarComparacion = !this.esMobile;
       await this.cargarCategorias();
-      this.setTipo("gasto");
 
       const hoy = new Date();
       this.compMesA = this.formatMesInput(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
       this.compMesB = this.formatMesInput(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1));
 
+      // Arranca en la pestaña que más usás este mes (en vez de "gasto" fijo),
+      // para no asumir que todo el mundo entra a cargar un gasto.
+      await this.cargarMovimientos();
+      const ingresos = this.movimientos.filter(m => m.tipo === "ingreso").length;
+      const gastos = this.movimientos.filter(m => m.tipo === "gasto").length;
+      this.setTipo(ingresos > gastos ? "ingreso" : "gasto");
+
       this.cargandoInicial = false;
-      await this.cargarTodo();
+      await this.cargarEvolucion();
       await this.cargarComparacion();
     },
 
@@ -369,6 +390,7 @@ function gastosApp() {
       this.tipo = t;
       this.categoria = "";
       this.limiteInput = "";
+      this.mostrarTodasCategorias = false;
       this.renderChartCategorias();
     },
 
@@ -590,11 +612,13 @@ function gastosApp() {
     // ==================== MES ACTUAL / MOVIMIENTOS ====================
 
     mesAnterior() {
+      this.cancelarEdicion();
       this.mesSeleccionado = new Date(this.mesSeleccionado.getFullYear(), this.mesSeleccionado.getMonth() - 1, 1);
       this.cargarTodo();
     },
     mesSiguiente() {
       if (this.esMesActual) return;
+      this.cancelarEdicion();
       this.mesSeleccionado = new Date(this.mesSeleccionado.getFullYear(), this.mesSeleccionado.getMonth() + 1, 1);
       this.cargarTodo();
     },
@@ -648,7 +672,27 @@ function gastosApp() {
         else mes.gastos += Number(m.monto);
       });
 
+      this.evolucionVacia = meses.every(m => m.ingresos === 0 && m.gastos === 0);
       this.renderChartEvolucion(meses);
+    },
+
+    editarMovimiento(mov) {
+      this.editandoCategorias = false;
+      this.editandoMovId = mov.id;
+      this.tipo = mov.tipo;
+      this.categoria = mov.categoria;
+      this.detalle = mov.detalle || "";
+      this.monto = String(mov.monto);
+      this.errorMsg = "";
+      document.getElementById("form-carga")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+
+    cancelarEdicion() {
+      this.editandoMovId = null;
+      this.categoria = "";
+      this.detalle = "";
+      this.monto = "";
+      this.errorMsg = "";
     },
 
     async guardar() {
@@ -657,18 +701,22 @@ function gastosApp() {
       this.guardando = true;
 
       try {
-        const { error } = await supabaseClient.from("transacciones").insert({
+        const datos = {
           tipo: this.tipo,
           categoria: this.categoria,
           detalle: this.detalle || null,
           monto: parseFloat(this.monto)
-        });
+        };
+        const { error } = this.editandoMovId
+          ? await supabaseClient.from("transacciones").update(datos).eq("id", this.editandoMovId)
+          : await supabaseClient.from("transacciones").insert(datos);
 
         if (error) {
           this.errorMsg = "Error al guardar. Intentá de nuevo.";
           return;
         }
 
+        this.editandoMovId = null;
         this.categoria = "";
         this.detalle = "";
         this.monto = "";
