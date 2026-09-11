@@ -611,30 +611,39 @@
             </template>
           </div>
 
-          <!-- Agregar categoría -->
-          <div x-show="editandoCategorias" x-cloak class="flex gap-2 mb-3">
+          <!-- Agregar categoría: crea la categoría y guarda el movimiento en un solo paso -->
+          <div x-show="editandoCategorias" x-cloak class="space-y-2 mb-3">
             <input type="text" x-model="nuevaCategoria" @keydown.enter="agregarCategoria()" placeholder="Nueva categoría"
-              class="flex-1 h-10 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400">
-            <button @click="agregarCategoria()" class="px-4 h-10 rounded-xl bg-slate-900 text-white text-sm font-medium">Agregar</button>
+              class="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400">
+            <input type="text" inputmode="decimal" x-model="monto" @keydown.enter="agregarCategoria()" placeholder="Monto"
+              class="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400">
+            <input x-show="tipo === 'gasto'" x-cloak type="text" inputmode="decimal" x-model="limiteInput" @keydown.enter="agregarCategoria()"
+              placeholder="Límite mensual (opcional)"
+              class="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400">
+            <button @click="agregarCategoria()" :disabled="!nuevaCategoria.trim() || !monto || parseFloat(monto) <= 0 || guardando"
+              class="w-full h-10 rounded-xl bg-slate-900 text-white text-sm font-medium disabled:opacity-40">Agregar</button>
+            <p x-show="errorMsg" x-text="errorMsg" class="text-rose-600 text-sm text-center"></p>
           </div>
 
-          <input x-show="tipo === 'gasto' && categoria" x-cloak type="text" inputmode="decimal" x-model="limiteInput"
-            @change="guardarLimite()" placeholder="Establecé límite mensual de esta categoría"
-            class="w-full h-11 px-4 mb-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+          <div x-show="!editandoCategorias">
+            <input x-show="tipo === 'gasto' && categoria" x-cloak type="text" inputmode="decimal" x-model="limiteInput"
+              @change="guardarLimite()" placeholder="Establecé límite mensual de esta categoría"
+              class="w-full h-11 px-4 mb-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
 
-          <input type="text" x-model="detalle" placeholder="Detalle (opcional)"
-            class="w-full h-11 px-4 mb-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+            <input type="text" x-model="detalle" placeholder="Detalle (opcional)"
+              class="w-full h-11 px-4 mb-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
 
-          <input type="text" inputmode="decimal" x-model="monto" placeholder="$ 0.00"
-            class="w-full h-14 px-4 mb-3 rounded-xl border border-slate-200 text-2xl font-semibold text-center focus:outline-none focus:ring-2 focus:ring-slate-400">
+            <input type="text" inputmode="decimal" x-model="monto" placeholder="$ 0.00"
+              class="w-full h-14 px-4 mb-3 rounded-xl border border-slate-200 text-2xl font-semibold text-center focus:outline-none focus:ring-2 focus:ring-slate-400">
 
-          <button @click="guardar()" :disabled="!puedeGuardar || guardando"
-            class="w-full h-12 rounded-xl font-semibold text-base text-white transition disabled:opacity-40"
-            :class="tipo === 'ingreso' ? 'bg-emerald-600' : 'bg-rose-600'">
-            <span x-show="!guardando">Guardar</span>
-            <span x-show="guardando" x-cloak>Guardando…</span>
-          </button>
-          <p x-show="errorMsg" x-text="errorMsg" class="text-rose-600 text-sm text-center mt-2"></p>
+            <button @click="guardar()" :disabled="!puedeGuardar || guardando"
+              class="w-full h-12 rounded-xl font-semibold text-base text-white transition disabled:opacity-40"
+              :class="tipo === 'ingreso' ? 'bg-emerald-600' : 'bg-rose-600'">
+              <span x-show="!guardando">Guardar</span>
+              <span x-show="guardando" x-cloak>Guardando…</span>
+            </button>
+            <p x-show="errorMsg" x-text="errorMsg" class="text-rose-600 text-sm text-center mt-2"></p>
+          </div>
         </div>
       </div>
 

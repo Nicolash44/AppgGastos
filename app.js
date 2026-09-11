@@ -507,27 +507,40 @@ function gastosApp() {
       this.nuevaCategoria = "";
     },
 
+    // Crea la categoría y guarda el movimiento en un solo paso: antes había que
+    // crear la categoría, esperar a que se seleccione sola y recién ahí cargar
+    // el monto — ahora se piden nombre + monto (obligatorio) + límite (opcional,
+    // solo gastos) juntos y "Agregar" hace las dos cosas.
     async agregarCategoria() {
+      this.errorMsg = "";
       const nombre = this.nuevaCategoria.trim();
-      if (!nombre) return;
+      if (!nombre || !this.monto || parseFloat(this.monto) <= 0 || this.guardando) return;
 
       const yaExiste = this.categorias[this.tipo].some(c => c.nombre.toLowerCase() === nombre.toLowerCase());
       if (yaExiste) {
-        this.nuevaCategoria = "";
+        this.errorMsg = "Ya existe una categoría con ese nombre.";
         return;
       }
 
-      const orden = this.categorias[this.tipo].length;
-      const { error } = await supabaseClient.from("categorias").insert({ tipo: this.tipo, nombre, orden });
-      if (!error) {
+      this.guardando = true;
+      try {
+        const orden = this.categorias[this.tipo].length;
+        const limite = this.tipo === "gasto" && this.limiteInput.trim() !== "" ? parseFloat(this.limiteInput) : null;
+        const { error } = await supabaseClient.from("categorias").insert({ tipo: this.tipo, nombre, orden, limite });
+        if (error) {
+          this.errorMsg = "Error al crear la categoría. Intentá de nuevo.";
+          return;
+        }
+
         this.nuevaCategoria = "";
+        this.limiteInput = "";
         await this.cargarCategorias();
-        // La deja lista para usar: si no, quedaba creada pero sin seleccionar (los
-        // clics en las burbujas están desactivados mientras se edita), y el
-        // movimiento se terminaba guardando con la categoría anterior por error.
         this.editandoCategorias = false;
         this.categoria = nombre;
-        this.limiteInput = "";
+        this.guardando = false;
+        await this.guardar();
+      } finally {
+        this.guardando = false;
       }
     },
 
