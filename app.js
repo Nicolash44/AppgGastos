@@ -355,6 +355,15 @@ function gastosApp() {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     },
 
+    // Filtra lo que se escribe en los campos de monto/límite: solo dígitos y un
+    // único punto decimal, para que no se puedan tipear letras.
+    soloNumeros(valor) {
+      const limpio = (valor || "").replace(/[^0-9.]/g, "");
+      const primerPunto = limpio.indexOf(".");
+      if (primerPunto === -1) return limpio;
+      return limpio.slice(0, primerPunto + 1) + limpio.slice(primerPunto + 1).replace(/\./g, "");
+    },
+
     setTipo(t) {
       this.tipo = t;
       this.categoria = "";
