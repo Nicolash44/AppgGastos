@@ -404,7 +404,10 @@
           </g>
         </svg>
       </div>
-      <h1 class="text-lg font-bold text-slate-900 mb-2" x-text="bloqueado ? (perfil.pagado_hasta ? 'Tu suscripción venció' : 'Tu prueba gratuita terminó') : 'Activar cuenta'"></h1>
+      <h1 class="text-lg font-bold text-slate-900 mb-2"
+        x-text="bloqueado
+          ? (perfil.pagado_hasta ? 'Tu suscripción venció' : 'Tu prueba gratuita terminó')
+          : (perfil && (perfil.mp_preapproval_id || pagoVigente()) ? 'Mi suscripción' : 'Activar cuenta')"></h1>
 
       <template x-if="perfil && perfil.mp_preapproval_id">
         <div class="mb-4">
@@ -534,9 +537,25 @@
         </svg>
         <span class="font-display font-bold text-sm text-slate-900">ingresos<span class="text-emerald-600">247</span></span>
       </span>
-      <span class="flex items-center gap-3">
+      <span class="flex items-center gap-1.5">
         <button x-show="esAdmin" x-cloak @click="abrirAdmin()" class="text-xs text-emerald-700 underline">Admin</button>
-        <button @click="logout()" class="text-xs text-slate-400 underline">Salir</button>
+        <button @click="mostrarPago = true" aria-label="Mi suscripción" title="Mi suscripción"
+          class="h-8 pl-2.5 pr-3 rounded-full text-xs font-semibold text-slate-600 bg-slate-50 flex items-center gap-1.5 transition hover:bg-slate-100 active:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+          <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/>
+            <line x1="2.5" y1="9.5" x2="21.5" y2="9.5"/>
+            <line x1="6" y1="14.5" x2="10" y2="14.5"/>
+          </svg>
+          Mi suscripción
+        </button>
+        <button @click="logout()" aria-label="Salir" title="Salir"
+          class="w-8 h-8 rounded-full text-slate-400 flex items-center justify-center transition hover:bg-slate-50 hover:text-slate-600 active:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
       </span>
     </div>
     <div class="flex items-center justify-center gap-3 mb-1">
