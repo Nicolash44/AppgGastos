@@ -359,6 +359,7 @@ function gastosApp() {
       this.tipo = t;
       this.categoria = "";
       this.limiteInput = "";
+      this.renderChartCategorias();
     },
 
     async logout() {
@@ -713,9 +714,9 @@ function gastosApp() {
     },
 
     renderChartCategorias() {
-      const gastos = this.movimientos.filter(m => m.tipo === "gasto");
+      const movs = this.movimientos.filter(m => m.tipo === this.tipo);
       const porCategoria = {};
-      gastos.forEach(g => {
+      movs.forEach(g => {
         porCategoria[g.categoria] = (porCategoria[g.categoria] || 0) + Number(g.monto);
       });
 
