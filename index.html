@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260911k">
+<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260911l">
 <script defer src="vendor/alpine.min.js"></script>
 <script src="vendor/supabase.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
@@ -101,10 +101,10 @@
       <div class="p-6">
         <div class="flex items-baseline justify-between mb-1">
           <span class="font-semibold text-slate-800">Acceso completo</span>
-          <span class="font-display text-2xl font-bold text-slate-900">$16.000<span class="text-sm font-normal text-slate-400">/mes</span></span>
+          <span class="font-display text-2xl font-bold text-slate-900">$16.000<span class="text-sm font-normal text-slate-500">/mes</span></span>
         </div>
-        <p class="text-slate-400 text-xs mb-2">Menos de $533 por día.</p>
-        <p class="text-emerald-600 text-sm font-medium mb-4">5 días de prueba gratis · sin tarjeta ni cobros automáticos</p>
+        <p class="text-slate-500 text-xs mb-2">Menos de $533 por día.</p>
+        <p class="text-emerald-700 text-sm font-medium mb-4">5 días de prueba gratis · sin tarjeta ni cobros automáticos</p>
 
         <ul class="text-left text-sm text-slate-600 space-y-2 mb-6">
           <li class="flex items-start gap-2"><span class="text-emerald-600 mt-0.5">•</span><span>Categorías propias, editables cuando quieras</span></li>
@@ -124,7 +124,7 @@
       Ya tengo cuenta, ingresar
     </button>
 
-    <p class="text-center text-xs text-slate-400 mt-6">
+    <p class="text-center text-xs text-slate-500 mt-6">
       <a href="terminos.html" class="underline">Términos y Condiciones</a> ·
       <a href="privacidad.html" class="underline">Política de Privacidad</a>
     </p>
@@ -132,7 +132,7 @@
 
   <!-- Login -->
   <div x-show="vista === 'login'" x-cloak class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm">
-    <button @click="vista = 'landing'" class="text-sm text-slate-500 mb-4">‹ Volver</button>
+    <button @click="vista = 'landing'" class="text-sm text-slate-500 mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">‹ Volver</button>
     <h1 class="text-xl font-bold text-center mb-6 text-slate-900">
       <span class="inline-flex items-center gap-1.5 align-middle">
         <svg viewBox="0 0 128 128" class="w-6 h-6 rounded-md">
@@ -151,13 +151,15 @@
       </span>
     </h1>
     <form @submit.prevent="login()" class="space-y-4">
-      <input type="email" x-model="email" placeholder="Email" required autocomplete="email"
+      <label for="login-email" class="sr-only">Email</label>
+      <input id="login-email" type="email" x-model="email" placeholder="Email" required autocomplete="email"
         class="w-full h-12 px-4 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
       <div class="relative">
-        <input :type="verPassword ? 'text' : 'password'" x-model="password" placeholder="Contraseña" required autocomplete="current-password"
+        <label for="login-password" class="sr-only">Contraseña</label>
+        <input id="login-password" :type="verPassword ? 'text' : 'password'" x-model="password" placeholder="Contraseña" required autocomplete="current-password"
           class="w-full h-12 pl-4 pr-12 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
         <button type="button" @click="verPassword = !verPassword" :aria-label="verPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-          class="absolute right-0 top-0 h-12 w-12 flex items-center justify-center text-slate-400 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl"
+          class="absolute right-0 top-0 h-12 w-12 flex items-center justify-center text-slate-500 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl"
           x-text="verPassword ? 'Ocultar' : 'Ver'"></button>
       </div>
       <button type="submit"
@@ -169,7 +171,7 @@
 
     <div class="flex items-center gap-3 my-4">
       <div class="h-px flex-1 bg-slate-200"></div>
-      <span class="text-xs text-slate-400">o</span>
+      <span class="text-xs text-slate-500">o</span>
       <div class="h-px flex-1 bg-slate-200"></div>
     </div>
 
@@ -194,13 +196,14 @@
 
   <!-- Recuperar contraseña -->
   <div x-show="vista === 'recuperar'" x-cloak class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm">
-    <button @click="vista = 'login'" class="text-sm text-slate-500 mb-4">‹ Volver</button>
+    <button @click="vista = 'login'" class="text-sm text-slate-500 mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">‹ Volver</button>
     <h1 class="text-xl font-bold text-center mb-1 text-slate-900">Recuperar contraseña</h1>
-    <p class="text-slate-400 text-sm text-center mb-6">Te mandamos un link para elegir una nueva.</p>
+    <p class="text-slate-500 text-sm text-center mb-6">Te mandamos un link para elegir una nueva.</p>
 
     <template x-if="!infoMsg">
       <form @submit.prevent="enviarRecuperacion()" class="space-y-4">
-        <input type="email" x-model="email" placeholder="Email" required autocomplete="email"
+        <label for="recuperar-email" class="sr-only">Email</label>
+        <input id="recuperar-email" type="email" x-model="email" placeholder="Email" required autocomplete="email"
           class="w-full h-12 px-4 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
         <button type="submit"
           class="w-full h-12 rounded-xl bg-emerald-700 text-white font-semibold text-base active:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-500">
@@ -218,18 +221,20 @@
   <!-- Nueva contraseña (llegado desde el link del mail) -->
   <div x-show="vista === 'nueva-contraseña'" x-cloak class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm">
     <h1 class="text-xl font-bold text-center mb-1 text-slate-900">Elegí una nueva contraseña</h1>
-    <p class="text-slate-400 text-sm text-center mb-6">Mínimo 8 caracteres.</p>
+    <p class="text-slate-500 text-sm text-center mb-6">Mínimo 8 caracteres.</p>
 
     <template x-if="!infoMsg">
       <form @submit.prevent="actualizarPassword()" class="space-y-4">
         <div class="relative">
-          <input :type="verPasswordNueva ? 'text' : 'password'" x-model="nuevaPassword" placeholder="Nueva contraseña (mín. 8 caracteres)" required autocomplete="new-password"
+          <label for="nueva-password" class="sr-only">Nueva contraseña</label>
+          <input id="nueva-password" :type="verPasswordNueva ? 'text' : 'password'" x-model="nuevaPassword" placeholder="Nueva contraseña (mín. 8 caracteres)" required autocomplete="new-password"
             class="w-full h-12 pl-4 pr-12 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
           <button type="button" @click="verPasswordNueva = !verPasswordNueva" :aria-label="verPasswordNueva ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-            class="absolute right-0 top-0 h-12 w-12 flex items-center justify-center text-slate-400 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl"
+            class="absolute right-0 top-0 h-12 w-12 flex items-center justify-center text-slate-500 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl"
             x-text="verPasswordNueva ? 'Ocultar' : 'Ver'"></button>
         </div>
-        <input :type="verPasswordNueva ? 'text' : 'password'" x-model="nuevaPassword2" placeholder="Repetir contraseña" required autocomplete="new-password"
+        <label for="nueva-password2" class="sr-only">Repetir contraseña</label>
+        <input id="nueva-password2" :type="verPasswordNueva ? 'text' : 'password'" x-model="nuevaPassword2" placeholder="Repetir contraseña" required autocomplete="new-password"
           class="w-full h-12 px-4 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
         <button type="submit"
           class="w-full h-12 rounded-xl bg-emerald-700 text-white font-semibold text-base active:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-500">
@@ -246,7 +251,7 @@
 
   <!-- Registro -->
   <div x-show="vista === 'registro'" x-cloak class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm">
-    <button @click="vista = 'landing'" class="text-sm text-slate-500 mb-4">‹ Volver</button>
+    <button @click="vista = 'landing'" class="text-sm text-slate-500 mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">‹ Volver</button>
     <h1 class="text-xl font-bold text-center mb-1 text-slate-900">
       <span class="inline-flex items-center gap-1.5 align-middle">
         <svg viewBox="0 0 128 128" class="w-6 h-6 rounded-md">
@@ -264,26 +269,29 @@
         Empezar prueba gratis
       </span>
     </h1>
-    <p class="text-slate-400 text-sm text-center mb-6">5 días gratis, sin tarjeta. Después, $16.000/mes.</p>
+    <p class="text-slate-500 text-sm text-center mb-6">5 días gratis, sin tarjeta. Después, $16.000/mes.</p>
 
     <template x-if="!infoMsg">
       <form @submit.prevent="registrarse()" class="space-y-4">
-        <input type="email" x-model="email" placeholder="Email" required autocomplete="email"
+        <label for="registro-email" class="sr-only">Email</label>
+        <input id="registro-email" type="email" x-model="email" placeholder="Email" required autocomplete="email"
           class="w-full h-12 px-4 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
         <div class="relative">
-          <input :type="verPasswordRegistro ? 'text' : 'password'" x-model="password" placeholder="Contraseña (mín. 8 caracteres)" required autocomplete="new-password"
+          <label for="registro-password" class="sr-only">Contraseña</label>
+          <input id="registro-password" :type="verPasswordRegistro ? 'text' : 'password'" x-model="password" placeholder="Contraseña (mín. 8 caracteres)" required autocomplete="new-password"
             class="w-full h-12 pl-4 pr-12 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
           <button type="button" @click="verPasswordRegistro = !verPasswordRegistro" :aria-label="verPasswordRegistro ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-            class="absolute right-0 top-0 h-12 w-12 flex items-center justify-center text-slate-400 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl"
+            class="absolute right-0 top-0 h-12 w-12 flex items-center justify-center text-slate-500 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-xl"
             x-text="verPasswordRegistro ? 'Ocultar' : 'Ver'"></button>
         </div>
-        <input :type="verPasswordRegistro ? 'text' : 'password'" x-model="password2" placeholder="Repetir contraseña" required autocomplete="new-password"
+        <label for="registro-password2" class="sr-only">Repetir contraseña</label>
+        <input id="registro-password2" :type="verPasswordRegistro ? 'text' : 'password'" x-model="password2" placeholder="Repetir contraseña" required autocomplete="new-password"
           class="w-full h-12 px-4 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-emerald-500">
         <button type="submit"
           class="w-full h-12 rounded-xl bg-emerald-700 text-white font-semibold text-base active:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-500">
           Crear cuenta y empezar
         </button>
-        <p class="text-center text-xs text-slate-400">
+        <p class="text-center text-xs text-slate-500">
           Al crear tu cuenta aceptás los <a href="terminos.html" class="underline">Términos y Condiciones</a>
           y la <a href="privacidad.html" class="underline">Política de Privacidad</a>.
         </p>
@@ -295,7 +303,7 @@
       <div>
         <div class="flex items-center gap-3 my-4">
           <div class="h-px flex-1 bg-slate-200"></div>
-          <span class="text-xs text-slate-400">o</span>
+          <span class="text-xs text-slate-500">o</span>
           <div class="h-px flex-1 bg-slate-200"></div>
         </div>
 
@@ -388,7 +396,7 @@
   <!-- Pantalla de pago: bloqueo total al vencer el trial, o abierta a mano desde el aviso -->
   <div x-show="(bloqueado || mostrarPago) && !confirmandoSuscripcion" x-cloak class="min-h-screen flex items-center justify-center px-4">
     <div class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm text-center">
-      <button x-show="!bloqueado" @click="mostrarPago = false" class="text-sm text-slate-500 mb-4">‹ Volver</button>
+      <button x-show="!bloqueado" @click="mostrarPago = false" class="text-sm text-slate-500 mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">‹ Volver</button>
 
       <div class="flex justify-center mb-3">
         <svg viewBox="0 0 128 128" class="w-8 h-8 rounded-lg">
@@ -409,7 +417,7 @@
           ? (perfil.pagado_hasta ? 'Tu suscripción venció' : 'Tu prueba gratuita terminó')
           : (perfil && (perfil.mp_preapproval_id || pagoVigente()) ? 'Mi suscripción' : 'Activar cuenta')"></h1>
 
-      <p x-show="!bloqueado && diasRestantesPago !== null" class="text-slate-400 text-sm mb-4">
+      <p x-show="!bloqueado && diasRestantesPago !== null" class="text-slate-500 text-sm mb-4">
         Te <span x-text="diasRestantesPago === 1 ? 'queda' : 'quedan'"></span> <span x-text="diasRestantesPago"></span>
         día<span x-show="diasRestantesPago !== 1">s</span> de suscripción.
       </p>
@@ -449,7 +457,7 @@
             <div class="bg-slate-50 rounded-xl py-3 px-4 mb-2 flex items-center justify-center gap-2">
               <span class="font-mono font-semibold text-slate-900" x-text="aliasPago"></span>
             </div>
-            <button @click="copiarAlias()" class="text-xs text-emerald-700 underline mb-6">Copiar alias</button>
+            <button @click="copiarAlias()" class="text-xs text-emerald-700 underline mb-6 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">Copiar alias</button>
 
             <template x-if="perfil && !perfil.pago_solicitado">
               <button @click="marcarPagoTransferido()"
@@ -465,7 +473,7 @@
       </template>
 
       <p x-show="errorMsg" x-text="errorMsg" class="text-rose-600 text-sm text-center mb-3"></p>
-      <button @click="logout()" class="text-sm text-slate-500 underline">Salir</button>
+      <button @click="logout()" class="text-sm text-slate-500 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">Salir</button>
     </div>
   </div>
 
@@ -488,7 +496,7 @@
     <div class="max-w-2xl mx-auto p-4">
       <div class="flex items-center justify-between mb-4">
         <h1 class="text-lg font-bold text-slate-900">Usuarios</h1>
-        <button @click="mostrarAdmin = false" class="text-sm text-slate-500 underline">Cerrar</button>
+        <button @click="mostrarAdmin = false" class="text-sm text-slate-500 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">Cerrar</button>
       </div>
 
       <div class="space-y-2">
@@ -497,15 +505,15 @@
             <div class="min-w-0">
               <div class="font-medium text-slate-900 text-sm truncate" x-text="u.email"></div>
               <div class="text-xs text-slate-500" x-text="estadoUsuario(u)"></div>
-              <div class="text-xs text-amber-600" x-show="u.pago_solicitado">Avisó que transfirió</div>
+              <div class="text-xs text-amber-700" x-show="u.pago_solicitado">Avisó que transfirió</div>
             </div>
             <div class="flex gap-2 shrink-0">
-              <button @click="confirmarPagoAdmin(u.user_id)" class="px-3 h-9 rounded-lg bg-emerald-700 text-white text-xs font-medium">Confirmar pago</button>
-              <button @click="bloquearUsuarioAdmin(u.user_id)" class="px-3 h-9 rounded-lg bg-rose-50 text-rose-600 text-xs font-medium border border-rose-200">Bloquear</button>
+              <button @click="confirmarPagoAdmin(u.user_id)" class="px-3 h-9 rounded-lg bg-emerald-700 text-white text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Confirmar pago</button>
+              <button @click="bloquearUsuarioAdmin(u.user_id)" class="px-3 h-9 rounded-lg bg-rose-50 text-rose-700 text-xs font-medium border border-rose-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Bloquear</button>
             </div>
           </div>
         </template>
-        <p x-show="usuariosAdmin.length === 0" class="text-center text-slate-400 text-sm py-6">Sin usuarios todavía</p>
+        <p x-show="usuariosAdmin.length === 0" class="text-center text-slate-500 text-sm py-6">Sin usuarios todavía</p>
       </div>
     </div>
   </div>
@@ -513,14 +521,14 @@
   <!-- Aviso de prueba activa -->
   <div x-show="diasRestantesTrial !== null" x-cloak class="bg-emerald-50 text-emerald-700 text-sm text-center py-2 px-4">
     Te quedan <span x-text="diasRestantesTrial"></span> días de prueba gratis ·
-    <span x-show="perfil && !perfil.pago_solicitado"><button @click="mostrarPago = true" class="underline font-medium">activar ahora</button></span>
+    <span x-show="perfil && !perfil.pago_solicitado"><button @click="mostrarPago = true" class="underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">activar ahora</button></span>
     <span x-show="perfil && perfil.pago_solicitado" class="font-medium">aviso enviado</span>
   </div>
 
   <!-- Aviso de suscripción -->
   <div x-show="diasRestantesPago !== null && diasRestantesPago <= 5" x-cloak class="bg-amber-50 text-amber-700 text-sm text-center py-2 px-4">
     Tu suscripción vence en <span x-text="diasRestantesPago"></span> día<span x-show="diasRestantesPago !== 1">s</span> ·
-    <span x-show="perfil && !perfil.pago_solicitado"><button @click="mostrarPago = true" class="underline font-medium">renovar ahora</button></span>
+    <span x-show="perfil && !perfil.pago_solicitado"><button @click="mostrarPago = true" class="underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">renovar ahora</button></span>
     <span x-show="perfil && perfil.pago_solicitado" class="font-medium">aviso enviado</span>
   </div>
 
@@ -543,7 +551,7 @@
         <span class="font-display font-bold text-sm text-slate-900">ingresos<span class="text-emerald-600">247</span></span>
       </span>
       <span class="flex items-center gap-1 shrink-0">
-        <button x-show="esAdmin" x-cloak @click="abrirAdmin()" class="shrink-0 whitespace-nowrap text-xs text-emerald-700 underline">Admin</button>
+        <button x-show="esAdmin" x-cloak @click="abrirAdmin()" class="shrink-0 whitespace-nowrap text-xs text-emerald-700 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">Admin</button>
         <button @click="mostrarPago = true" aria-label="Mi suscripción" title="Mi suscripción"
           class="shrink-0 h-8 px-2 lg:pl-2.5 lg:pr-3 rounded-full text-xs font-semibold text-slate-600 bg-slate-50 flex items-center gap-1.5 whitespace-nowrap transition hover:bg-slate-100 active:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
           <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -554,7 +562,7 @@
           <span class="hidden lg:inline">Mi suscripción</span>
         </button>
         <button @click="logout()" aria-label="Salir" title="Salir"
-          class="shrink-0 w-8 h-8 rounded-full text-slate-400 flex items-center justify-center transition hover:bg-slate-50 hover:text-slate-600 active:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+          class="shrink-0 w-8 h-8 rounded-full text-slate-500 flex items-center justify-center transition hover:bg-slate-50 hover:text-slate-600 active:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
           <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
@@ -564,9 +572,9 @@
       </span>
     </div>
     <div class="flex items-center justify-center gap-3 mb-1">
-      <button @click="mesAnterior()" aria-label="Mes anterior" class="w-8 h-8 flex items-center justify-center text-slate-400 text-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded-full">‹</button>
+      <button @click="mesAnterior()" aria-label="Mes anterior" class="w-8 h-8 flex items-center justify-center text-slate-500 text-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded-full">‹</button>
       <span class="text-sm text-slate-500 font-medium capitalize w-36 text-center" x-text="mesSeleccionadoLabel"></span>
-      <button @click="mesSiguiente()" :disabled="esMesActual" aria-label="Mes siguiente" class="w-8 h-8 flex items-center justify-center text-slate-400 text-lg disabled:opacity-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded-full">›</button>
+      <button @click="mesSiguiente()" :disabled="esMesActual" aria-label="Mes siguiente" class="w-8 h-8 flex items-center justify-center text-slate-500 text-lg disabled:opacity-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded-full">›</button>
     </div>
     <div class="font-display text-4xl font-bold text-center tracking-tight" :class="balance >= 0 ? 'text-emerald-700' : 'text-rose-600'">
       $ <span x-text="formatMonto(balance)"></span>
@@ -666,11 +674,14 @@
 
           <!-- Agregar categoría: crea la categoría y guarda el movimiento en un solo paso -->
           <div x-show="editandoCategorias" x-cloak class="space-y-2 mb-3">
-            <input type="text" x-model="nuevaCategoria" @keydown.enter="agregarCategoria()" placeholder="Nueva categoría"
+            <label for="cat-nueva-nombre" class="sr-only">Nombre de la nueva categoría</label>
+            <input id="cat-nueva-nombre" type="text" x-model="nuevaCategoria" @keydown.enter="agregarCategoria()" placeholder="Nueva categoría"
               class="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400">
-            <input type="text" inputmode="decimal" x-model="monto" @input="monto = soloNumeros(monto)" @keydown.enter="agregarCategoria()" placeholder="Monto"
+            <label for="cat-nueva-monto" class="sr-only">Monto</label>
+            <input id="cat-nueva-monto" type="text" inputmode="decimal" x-model="monto" @input="monto = soloNumeros(monto)" @keydown.enter="agregarCategoria()" placeholder="Monto"
               class="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400">
-            <input x-show="tipo === 'gasto'" x-cloak type="text" inputmode="decimal" x-model="limiteInput" @input="limiteInput = soloNumeros(limiteInput)" @keydown.enter="agregarCategoria()"
+            <label for="cat-nueva-limite" class="sr-only">Límite mensual (opcional)</label>
+            <input id="cat-nueva-limite" x-show="tipo === 'gasto'" x-cloak type="text" inputmode="decimal" x-model="limiteInput" @input="limiteInput = soloNumeros(limiteInput)" @keydown.enter="agregarCategoria()"
               placeholder="Límite mensual (opcional)"
               class="w-full h-10 px-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400">
             <button @click="agregarCategoria()" :disabled="!nuevaCategoria.trim() || !monto || parseFloat(monto) <= 0 || guardando"
@@ -681,17 +692,20 @@
           <div x-show="!editandoCategorias">
             <div x-show="editandoMovId" x-cloak class="flex items-center justify-between mb-3 px-3 py-2 rounded-xl bg-slate-50 text-xs text-slate-600">
               <span>Editando movimiento</span>
-              <button type="button" @click="cancelarEdicion()" class="font-semibold text-slate-700 underline">Cancelar</button>
+              <button type="button" @click="cancelarEdicion()" class="font-semibold text-slate-700 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">Cancelar</button>
             </div>
 
-            <input x-show="tipo === 'gasto' && categoria" x-cloak type="text" inputmode="decimal" x-model="limiteInput"
+            <label for="cat-editar-limite" class="sr-only">Límite mensual de esta categoría</label>
+            <input id="cat-editar-limite" x-show="tipo === 'gasto' && categoria" x-cloak type="text" inputmode="decimal" x-model="limiteInput"
               @input="limiteInput = soloNumeros(limiteInput)" @change="guardarLimite()" placeholder="Establecé límite mensual de esta categoría"
               class="w-full h-11 px-4 mb-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
 
-            <input x-show="categoria" x-cloak type="text" x-model="detalle" placeholder="Detalle (opcional)"
+            <label for="form-detalle" class="sr-only">Detalle (opcional)</label>
+            <input id="form-detalle" x-show="categoria" x-cloak type="text" x-model="detalle" placeholder="Detalle (opcional)"
               class="w-full h-11 px-4 mb-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
 
-            <input type="text" inputmode="decimal" x-model="monto" @input="monto = soloNumeros(monto)" placeholder="$ 0.00"
+            <label for="form-monto" class="sr-only">Monto</label>
+            <input id="form-monto" type="text" inputmode="decimal" x-model="monto" @input="monto = soloNumeros(monto)" placeholder="$ 0.00"
               class="w-full h-14 px-4 mb-3 rounded-xl border border-slate-200 text-2xl font-semibold text-center focus:outline-none focus:ring-2 focus:ring-slate-400">
 
             <button @click="guardar()" :disabled="!puedeGuardar || guardando"
@@ -734,7 +748,7 @@
                 </button>
               </div>
             </span>
-            <button @click="mostrarComparacion = !mostrarComparacion; if (mostrarComparacion) cargarComparacion()" aria-label="Mostrar/ocultar comparativo" class="shrink-0 text-slate-400 text-sm px-1" x-text="mostrarComparacion ? '−' : '+'"></button>
+            <button @click="mostrarComparacion = !mostrarComparacion; if (mostrarComparacion) cargarComparacion()" aria-label="Mostrar/ocultar comparativo" class="shrink-0 text-slate-500 text-sm px-1" x-text="mostrarComparacion ? '−' : '+'"></button>
           </div>
 
           <div x-show="mostrarComparacion" x-cloak class="mt-3">
@@ -752,13 +766,16 @@
             </div>
 
             <div class="grid grid-cols-2 gap-2 mb-3">
-              <input type="month" x-model="compMesA" @change="cargarComparacion()"
+              <label for="comp-mes-a" class="sr-only">Primer mes a comparar</label>
+              <input id="comp-mes-a" type="month" x-model="compMesA" @change="cargarComparacion()"
                 class="h-10 px-2 rounded-lg border border-slate-200 text-sm">
-              <input type="month" x-model="compMesB" @change="cargarComparacion()"
+              <label for="comp-mes-b" class="sr-only">Segundo mes a comparar</label>
+              <input id="comp-mes-b" type="month" x-model="compMesB" @change="cargarComparacion()"
                 class="h-10 px-2 rounded-lg border border-slate-200 text-sm">
             </div>
 
-            <select x-model="compCategoria" @change="cargarComparacion()"
+            <label for="comp-categoria" class="sr-only">Filtrar comparación por categoría</label>
+            <select id="comp-categoria" x-model="compCategoria" @change="cargarComparacion()"
               class="w-full h-10 px-2 mb-4 rounded-lg border border-slate-200 text-sm">
               <option value="">Todas las categorías</option>
               <template x-for="cat in categoriasCompActuales" :key="cat.id">
@@ -770,11 +787,11 @@
               <div class="mb-3 text-center">
                 <div class="grid grid-cols-2 gap-2 text-sm mb-2">
                   <div>
-                    <div class="text-slate-400 text-xs" x-text="labelMes(compMesA)"></div>
+                    <div class="text-slate-500 text-xs" x-text="labelMes(compMesA)"></div>
                     <div class="font-semibold" x-text="'$ ' + formatMonto(comparacion.totalA)"></div>
                   </div>
                   <div>
-                    <div class="text-slate-400 text-xs" x-text="labelMes(compMesB)"></div>
+                    <div class="text-slate-500 text-xs" x-text="labelMes(compMesB)"></div>
                     <div class="font-semibold" x-text="'$ ' + formatMonto(comparacion.totalB)"></div>
                   </div>
                 </div>
@@ -896,13 +913,13 @@
     </span>
     <div class="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
       <template x-for="mov in movimientos" :key="mov.id">
-        <div @click="editarMovimiento(mov)" @keydown.enter="editarMovimiento(mov)" role="button" tabindex="0"
+        <div @click="editarMovimiento(mov)" @keydown.enter="editarMovimiento(mov)" @keydown.space.prevent="editarMovimiento(mov)" role="button" tabindex="0"
           :aria-label="'Editar movimiento ' + mov.categoria"
           class="bg-white rounded-xl shadow-[0_1px_2px_rgba(15,23,42,0.04),0_2px_8px_rgba(15,23,42,0.05)] p-3 flex justify-between items-center cursor-pointer transition hover:shadow-[0_1px_2px_rgba(15,23,42,0.06),0_4px_12px_rgba(15,23,42,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
           :class="editandoMovId === mov.id ? 'ring-2 ring-slate-400' : ''">
           <div class="min-w-0">
             <div class="font-medium text-slate-900 text-sm truncate" x-text="mov.categoria"></div>
-            <div class="text-xs text-slate-400 truncate" x-text="(mov.detalle || '') + ' · ' + formatFecha(mov.fecha)"></div>
+            <div class="text-xs text-slate-500 truncate" x-text="(mov.detalle || '') + ' · ' + formatFecha(mov.fecha)"></div>
           </div>
           <div class="text-right flex items-center gap-2 shrink-0">
             <span class="font-semibold text-sm" :class="mov.tipo === 'ingreso' ? 'text-emerald-700' : 'text-rose-600'">
