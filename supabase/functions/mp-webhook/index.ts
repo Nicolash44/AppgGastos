@@ -31,19 +31,10 @@ Deno.serve(async (req) => {
       return new Response("ignorado: sin type/id", { status: 200 });
     }
 
-    if (type === "payment") {
-      const pagoRes = await fetch(`https://api.mercadopago.com/v1/payments/${dataId}`, {
-        headers: { "Authorization": `Bearer ${MP_ACCESS_TOKEN}` },
-      });
-      const pago = await pagoRes.json();
-
-      if (!pagoRes.ok || pago.status !== "approved" || !pago.external_reference) {
-        return new Response("ignorado: pago no aprobado", { status: 200 });
-      }
-
-      const userId = pago.external_reference;
-      const paymentId = String(pago.id);
-
+    // Suma un mes a pagado_hasta (desde el vencimiento actual si sigue vigente,
+    // si no desde hoy) y registra el payment_id para no acreditar dos veces si
+    // Mercado Pago reenvía la misma notificación.
+    async function acreditarPago(userId: string, paymentId: string) {
       const { error: insertError } = await supabaseAdmin
         .from("pagos_mp")
         .insert({ payment_id: paymentId, user_id: userId });
@@ -71,6 +62,38 @@ Deno.serve(async (req) => {
         .eq("user_id", userId);
 
       return new Response("ok: pago acreditado", { status: 200 });
+    }
+
+    if (type === "payment") {
+      const pagoRes = await fetch(`https://api.mercadopago.com/v1/payments/${dataId}`, {
+        headers: { "Authorization": `Bearer ${MP_ACCESS_TOKEN}` },
+      });
+      const pago = await pagoRes.json();
+
+      if (!pagoRes.ok || pago.status !== "approved" || !pago.external_reference) {
+        return new Response("ignorado: pago no aprobado", { status: 200 });
+      }
+
+      return await acreditarPago(pago.external_reference, String(pago.id));
+    }
+
+    // Los pagos recurrentes de una suscripción (Preapproval) no avisan por el
+    // topic "payment" — Mercado Pago manda "subscription_authorized_payment"
+    // con el id de un recurso de /authorized_payments/, distinto del id de
+    // pago suelto de /v1/payments/. Sin este caso, cada débito mensual de una
+    // suscripción quedaba invisible para el webhook (así estuvo el bug hasta
+    // que se probó el flujo de punta a punta con pago real de Mercado Pago).
+    if (type === "subscription_authorized_payment") {
+      const apRes = await fetch(`https://api.mercadopago.com/authorized_payments/${dataId}`, {
+        headers: { "Authorization": `Bearer ${MP_ACCESS_TOKEN}` },
+      });
+      const ap = await apRes.json();
+
+      if (!apRes.ok || !ap.external_reference || ap.payment?.status !== "approved") {
+        return new Response("ignorado: pago de suscripción no aprobado", { status: 200 });
+      }
+
+      return await acreditarPago(String(ap.external_reference), String(ap.payment.id));
     }
 
     if (type === "subscription_preapproval" || type === "preapproval") {
