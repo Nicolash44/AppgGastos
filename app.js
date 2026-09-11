@@ -772,12 +772,16 @@ function gastosApp() {
       if (this.chartEvolucion) this.chartEvolucion.destroy();
 
       this.chartEvolucion = new Chart(ctx, {
-        type: "bar",
         data: {
           labels: meses.map(m => m.label),
           datasets: [
-            { label: "Ingresos", data: meses.map(m => m.ingresos), backgroundColor: "#059669", borderRadius: 4 },
-            { label: "Gastos", data: meses.map(m => m.gastos), backgroundColor: "#e11d48", borderRadius: 4 }
+            { type: "bar", label: "Ingresos", data: meses.map(m => m.ingresos), backgroundColor: "#059669", borderRadius: 4, order: 2 },
+            { type: "bar", label: "Gastos", data: meses.map(m => m.gastos), backgroundColor: "#e11d48", borderRadius: 4, order: 2 },
+            {
+              type: "line", label: "Balance", data: meses.map(m => m.ingresos - m.gastos),
+              borderColor: "#0F172A", backgroundColor: "#0F172A", pointBackgroundColor: "#0F172A",
+              borderWidth: 2, pointRadius: 3, tension: 0.3, fill: false, order: 1
+            }
           ]
         },
         options: {
