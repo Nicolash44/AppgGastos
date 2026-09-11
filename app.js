@@ -214,10 +214,6 @@ function gastosApp() {
     // --- layout / dispositivo ---
     esMobile: window.matchMedia("(max-width: 767px)").matches,
 
-    // Modo ayuda (solo desktop): al activarlo, pasar el mouse por una tarjeta
-    // muestra qué hace esa sección.
-    modoAyuda: false,
-
     get categoriasActuales() {
       return this.categorias[this.tipo];
     },
