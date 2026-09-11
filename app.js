@@ -187,6 +187,7 @@ function gastosApp() {
     detalle: "",
     monto: "",
     movimientos: [],
+    movAEliminar: null,
     errorMsg: "",
     guardando: false,
     cargandoInicial: true,
@@ -675,6 +676,16 @@ function gastosApp() {
       } finally {
         this.guardando = false;
       }
+    },
+
+    confirmarEliminar(mov) {
+      this.movAEliminar = mov;
+    },
+
+    async eliminarConfirmado() {
+      const mov = this.movAEliminar;
+      this.movAEliminar = null;
+      if (mov) await this.eliminar(mov);
     },
 
     async eliminar(mov) {

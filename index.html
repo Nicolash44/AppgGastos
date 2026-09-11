@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260911f">
+<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260911g">
 <script defer src="vendor/alpine.min.js"></script>
 <script src="vendor/supabase.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
@@ -883,7 +883,7 @@
             <span class="font-semibold text-sm" :class="mov.tipo === 'ingreso' ? 'text-emerald-700' : 'text-rose-600'">
               <span x-text="mov.tipo === 'ingreso' ? '+' : '-'"></span>$<span x-text="formatMonto(mov.monto)"></span>
             </span>
-            <button @click="eliminar(mov)" aria-label="Eliminar movimiento y ajustar el balance" title="Eliminar"
+            <button @click="confirmarEliminar(mov)" aria-label="Eliminar movimiento y ajustar el balance" title="Eliminar"
               class="w-7 h-7 -mr-1 rounded-full flex items-center justify-center text-slate-300 transition hover:bg-rose-50 hover:text-rose-500 active:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <polyline points="4 7 20 7"/>
@@ -903,6 +903,28 @@
   </div>
   <!-- fin contenido normal -->
 
+  <!-- Confirmación de borrado de movimiento -->
+  <div x-show="movAEliminar" x-cloak x-transition.opacity.duration.150ms
+    class="fixed inset-0 bg-slate-900/50 z-40 flex items-center justify-center px-4">
+    <div @click.outside="movAEliminar = null" class="bg-white rounded-2xl shadow-[0_8px_24px_rgba(15,23,42,0.15)] p-6 w-full max-w-sm text-center">
+      <h2 class="text-lg font-bold text-slate-900 mb-2">¿Eliminar este movimiento?</h2>
+      <template x-if="movAEliminar">
+        <p class="text-slate-500 text-sm mb-6">
+          Vas a borrar <span class="font-medium text-slate-700" x-text="movAEliminar.categoria"></span> de
+          <span class="font-medium text-slate-700" x-text="'$' + formatMonto(movAEliminar.monto)"></span>.
+          Tu balance de este mes va a <span x-text="movAEliminar.tipo === 'ingreso' ? 'bajar' : 'subir'"></span>
+          <span x-text="'$' + formatMonto(movAEliminar.monto)"></span> cuando lo saques.
+        </p>
+      </template>
+      <div class="flex gap-2">
+        <button @click="movAEliminar = null"
+          class="flex-1 h-11 rounded-xl border border-slate-200 text-slate-600 font-semibold text-sm transition active:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Cancelar</button>
+        <button @click="eliminarConfirmado()"
+          class="flex-1 h-11 rounded-xl bg-rose-600 text-white font-semibold text-sm transition active:bg-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast de deshacer -->
   <div x-show="toast" x-cloak x-transition
     class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900 text-white text-sm rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 max-w-[calc(100%-2rem)]">
@@ -913,6 +935,6 @@
 </div>
 
 <script src="config.js"></script>
-<script src="app.js?v=20260911e"></script>
+<script src="app.js?v=20260911f"></script>
 </body>
 </html>
