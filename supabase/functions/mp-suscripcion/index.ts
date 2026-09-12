@@ -6,7 +6,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN")!;
-const MP_PRECIO_MENSUAL = Number(Deno.env.get("MP_PRECIO_MENSUAL") ?? "16000");
+const MP_PRECIO_MENSUAL = Number(Deno.env.get("MP_PRECIO_MENSUAL") ?? "14000");
 // Adónde vuelve el usuario después de autorizar el pago en Mercado Pago.
 const SITE_URL = Deno.env.get("SITE_URL") ?? "https://ingresos247.com/";
 

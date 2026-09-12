@@ -1,7 +1,8 @@
 # Ingresos247
 
-App web de control de gastos e ingresos, vendida como servicio mensual ($16.000 ARS/mes,
-con 5 días de prueba gratis). Sitio estático (HTML + Alpine.js + Tailwind) sobre
+App web de control de gastos e ingresos, vendida como servicio mensual ($14.000 ARS/mes
+por Mercado Pago, $12.000 ARS/mes por transferencia, con 5 días de prueba gratis). Sitio
+estático (HTML + Alpine.js + Tailwind) sobre
 Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio propio
 `ingresos247.com`.
 
@@ -44,11 +45,21 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
 
 ## Modelo de negocio y cómo funciona el acceso
 
-- Un solo plan, $16.000/mes, 5 días de prueba gratis al registrarse.
+- Un solo plan, con precio distinto según medio de pago: **$14.000/mes por Mercado Pago,
+  $12.000/mes por transferencia** (más barato porque no paga la comisión de MP). 5 días
+  de prueba gratis al registrarse. El precio de Mercado Pago se fija en el secreto de
+  Edge Function `MP_PRECIO_MENSUAL` (default 14000); el de transferencia es solo texto en
+  `index.html` (3 lugares) — no hay una única fuente de verdad para ninguno de los dos.
 - **Dos formas de pagar, conviven las dos**: suscripción automática con Mercado Pago
   (débito recurrente con tarjeta) o transferencia manual + confirmación a mano. En la
   pantalla de pago, Mercado Pago es la opción principal; la transferencia queda detrás
   de un link "¿Preferís transferir vos mismo?".
+- **Facturación**: solo se emite **Factura B "A CONSUMIDOR FINAL"** (tabla
+  `public.facturas`, `009_facturacion.sql`, `tipo_comprobante` 6 fijo). Por RG
+  1415/2003, Anexo II, para operaciones menores a $10.000.000 no hace falta pedir
+  CUIT/DNI ni nombre del comprador antes de pagar — esos campos van a AFIP como "NR"
+  (No Requerido) al facturar. No hay ningún paso ni formulario de datos personales en
+  el flujo de pago por este motivo.
 - **Mercado Pago** (`007_mercadopago.sql`, `supabase/functions/mp-suscripcion/`,
   `supabase/functions/mp-webhook/`): usa el modelo Preapproval (suscripción mensual).
   `mp-suscripcion` la llama la app logueada para crear (`action: "crear"`, devuelve un
@@ -62,7 +73,7 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
   `puede_operar()` para nada de esto — ya evalúa `pagado_hasta`.
 - Secretos de Edge Functions para Mercado Pago (Supabase → Edge Functions → Secrets):
   `MP_ACCESS_TOKEN` (nunca en el repo) y opcionalmente `MP_PRECIO_MENSUAL` (default
-  16000 si no está seteado). Si el precio del plan cambia, hay que actualizarlo ahí
+  14000 si no está seteado). Si el precio del plan cambia, hay que actualizarlo ahí
   además de en los 3 lugares de `index.html` que lo muestran como texto — no hay una
   única fuente de verdad para el precio todavía.
 - Pago manual: el cliente transfiere a un alias (`ALIAS_PAGO` en `app.js`) y toca
@@ -143,6 +154,20 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
 - Mercado Pago está integrado con credenciales de **prueba** (sandbox) hasta validar el
   flujo completo con una tarjeta de prueba. No pasar a las credenciales de producción
   (`MP_ACCESS_TOKEN`) sin haber probado alta, primer pago y cancelación de punta a punta.
+- **Facturación electrónica AFIP (WSFEv1) — pendiente, bloqueada por trámite manual.**
+  El usuario es Responsable Inscripto pero todavía no generó el certificado digital de
+  AFIP. Falta que haga, en afip.gob.ar (no es algo que se resuelva desde este repo):
+  1. Generar un certificado digital (clave privada + CSR) en "Administrador de
+     Relaciones de Clave Fiscal" y autorizar el servicio "wsfe" (Facturación Electrónica)
+     para ese certificado.
+  2. Guardar el certificado + clave privada para pasárselos a Claude como secretos de
+     Edge Function (nunca en el repo) — se va a necesitar una nueva Edge Function
+     (ej. `facturar`) que haga login WSAA (token+sign, vence cada 12hs) y llame
+     WSFEv1 (`FECAESolicitar`) para pedir el CAE de cada pago.
+  Mientras tanto ya existen, listos para usarse cuando el certificado esté: las
+  columnas de datos del cliente en `perfiles` y la tabla `public.facturas`
+  (`009_facturacion.sql`), que guarda cada comprobante emitido (tipo, punto de venta,
+  número, CAE, vencimiento del CAE, importe) con policy de solo lectura para el usuario.
 
 ## Convenciones de este proyecto
 

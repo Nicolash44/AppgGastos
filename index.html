@@ -101,9 +101,9 @@
       <div class="p-6">
         <div class="flex items-baseline justify-between mb-1">
           <span class="font-semibold text-slate-800">Acceso completo</span>
-          <span class="font-display text-2xl font-bold text-slate-900">$16.000<span class="text-sm font-normal text-slate-500">/mes</span></span>
+          <span class="font-display text-2xl font-bold text-slate-900">desde $12.000<span class="text-sm font-normal text-slate-500">/mes</span></span>
         </div>
-        <p class="text-slate-500 text-xs mb-2">Menos de $533 por día.</p>
+        <p class="text-slate-500 text-xs mb-2">$12.000/mes por transferencia, $14.000/mes con Mercado Pago.</p>
         <p class="text-emerald-700 text-sm font-medium mb-4">5 días de prueba gratis · sin tarjeta ni cobros automáticos</p>
 
         <ul class="text-left text-sm text-slate-600 space-y-2 mb-6">
@@ -269,7 +269,7 @@
         Empezar prueba gratis
       </span>
     </h1>
-    <p class="text-slate-500 text-sm text-center mb-6">5 días gratis, sin tarjeta. Después, $16.000/mes.</p>
+    <p class="text-slate-500 text-sm text-center mb-6">5 días gratis, sin tarjeta. Después, desde $12.000/mes.</p>
 
     <template x-if="!infoMsg">
       <form @submit.prevent="registrarse()" class="space-y-4">
@@ -434,7 +434,7 @@
 
       <template x-if="perfil && !perfil.mp_preapproval_id">
         <div>
-          <p class="text-slate-500 text-sm mb-4">Suscribite y pagá con tarjeta, se renueva solo cada mes:</p>
+          <p class="text-slate-500 text-sm mb-4">Suscribite y pagá con tarjeta ($14.000/mes), se renueva solo cada mes:</p>
 
           <button x-show="!mpInitPoint" @click="suscribirseConMP()" :disabled="procesandoMP"
             class="block w-full h-12 rounded-xl bg-emerald-700 text-white font-semibold text-base active:bg-emerald-800 disabled:opacity-40 mb-4">
@@ -448,11 +448,11 @@
           </a>
 
           <button type="button" @click="mostrarTransferencia = !mostrarTransferencia" class="text-xs text-slate-500 underline mb-4">
-            <span x-text="mostrarTransferencia ? 'Ocultar transferencia manual' : '¿Preferís transferir vos mismo?'"></span>
+            <span x-text="mostrarTransferencia ? 'Ocultar transferencia manual' : '¿Preferís transferir vos mismo? ($12.000/mes)'"></span>
           </button>
 
           <div x-show="mostrarTransferencia" x-cloak>
-            <p class="text-slate-500 text-sm mb-4">Transferí $16.000/mes a este alias y avisame acá abajo:</p>
+            <p class="text-slate-500 text-sm mb-4">Transferí $12.000/mes a este alias y avisame acá abajo:</p>
 
             <div class="bg-slate-50 rounded-xl py-3 px-4 mb-2 flex items-center justify-center gap-2">
               <span class="font-mono font-semibold text-slate-900" x-text="aliasPago"></span>
