@@ -522,6 +522,25 @@
       </div>
 
       <h2 class="text-lg font-bold text-slate-900 mt-8 mb-4">Comisiones por referido</h2>
+
+      <label for="admin-mes-referidos" class="block text-xs text-slate-500 mb-1">Mes</label>
+      <input id="admin-mes-referidos" type="month" x-model="mesResumenReferidos"
+        class="h-11 px-4 mb-3 rounded-xl border border-slate-200 text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+
+      <div class="space-y-2 mb-6">
+        <template x-for="r in resumenReferidos" :key="r.codigo">
+          <div class="bg-emerald-50 rounded-xl p-3 flex justify-between items-center">
+            <span class="font-medium text-slate-900 text-sm" x-text="r.codigo"></span>
+            <span class="text-sm text-slate-700">
+              <span x-text="r.cantidad"></span> pago<span x-show="r.cantidad !== 1">s</span> ·
+              <span class="font-semibold" x-text="'$' + r.total.toLocaleString('es-AR')"></span>
+            </span>
+          </div>
+        </template>
+        <p x-show="resumenReferidos.length === 0" class="text-center text-slate-500 text-sm py-4">Sin comisiones ese mes</p>
+      </div>
+
+      <p class="text-xs text-slate-500 mb-2">Detalle:</p>
       <div class="space-y-2">
         <template x-for="p in pagosReferidos" :key="p.id">
           <div class="bg-slate-50 rounded-xl p-3">

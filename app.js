@@ -193,6 +193,7 @@ function gastosApp() {
     mostrarAdmin: false,
     usuariosAdmin: [],
     pagosReferidos: [],
+    mesResumenReferidos: "",
     busquedaAdmin: "",
     tipo: "gasto",
     categoria: "",
@@ -530,8 +531,24 @@ function gastosApp() {
     abrirAdmin() {
       this.mostrarAdmin = true;
       this.busquedaAdmin = "";
+      if (!this.mesResumenReferidos) this.mesResumenReferidos = this.formatMesInput(new Date());
       this.cargarUsuariosAdmin();
       this.cargarPagosReferidos();
+    },
+
+    // Agrupa pagos_referidos del mes elegido por vendedor, para saber cuánto
+    // pagarle a cada uno sin tener que contar fila por fila.
+    get resumenReferidos() {
+      const porVendedor = {};
+      for (const p of this.pagosReferidos) {
+        if (!p.creado_en.startsWith(this.mesResumenReferidos)) continue;
+        if (!porVendedor[p.codigo_referido]) {
+          porVendedor[p.codigo_referido] = { codigo: p.codigo_referido, cantidad: 0, total: 0 };
+        }
+        porVendedor[p.codigo_referido].cantidad++;
+        porVendedor[p.codigo_referido].total += Number(p.monto) || 0;
+      }
+      return Object.values(porVendedor).sort((a, b) => b.total - a.total);
     },
 
     get usuariosAdminFiltrados() {
