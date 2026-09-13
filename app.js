@@ -869,6 +869,34 @@ function gastosApp() {
     formatMonto(n) {
       return Number(n).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     },
+    exportarCSV() {
+      if (this.movimientos.length === 0) return;
+
+      const escapar = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const filas = [["Fecha", "Tipo", "Categoría", "Detalle", "Monto"]];
+      // Del más viejo al más nuevo, al revés del listado en pantalla, porque
+      // así se lee más natural en una planilla (orden cronológico).
+      [...this.movimientos].reverse().forEach(m => {
+        filas.push([
+          m.fecha,
+          m.tipo === "ingreso" ? "Ingreso" : "Gasto",
+          m.categoria,
+          m.detalle || "",
+          m.monto
+        ]);
+      });
+
+      // BOM al principio para que Excel abra los acentos bien en vez de romperlos.
+      const csv = "﻿" + filas.map(f => f.map(escapar).join(",")).join("\r\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const nombreMes = `${this.mesSeleccionado.getFullYear()}-${String(this.mesSeleccionado.getMonth() + 1).padStart(2, "0")}`;
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `movimientos-ingresos247-${nombreMes}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
     formatFecha(f) {
       return new Date(f + "T00:00:00").toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" });
     },

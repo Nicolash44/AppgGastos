@@ -956,30 +956,41 @@
 
   <!-- Listado -->
   <div class="px-4 mt-6 md:px-6">
-    <span class="flex items-center gap-1 mb-2 px-1">
-      <h2 class="text-[13px] font-semibold text-slate-500 tracking-wide">Movimientos</h2>
-      <span class="relative inline-flex" x-data="{ ayudaAbierta: false }">
-        <button type="button" @click.stop="ayudaAbierta = !ayudaAbierta" @mouseenter="!esMobile && (ayudaAbierta = true)"
-          :aria-expanded="ayudaAbierta" aria-label="Ayuda sobre esta sección"
-          class="w-5 h-5 rounded-full flex items-center justify-center text-slate-300 hover:bg-slate-100 hover:text-slate-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="9.5"/>
-            <path d="M9.1 9a3 3 0 0 1 5.75 1.1c0 1.9-2.85 2.85-2.85 2.85"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-        </button>
-        <div x-show="ayudaAbierta" x-cloak x-transition.opacity.duration.150ms @click.outside="ayudaAbierta = false"
-          class="absolute z-30 top-full left-1/2 -translate-x-1/2 mt-2 w-56 max-w-[85vw] rounded-xl bg-slate-900 text-white text-xs leading-relaxed p-3 pr-8 shadow-[0_4px_16px_rgba(15,23,42,0.25)]">
-          Todo lo que cargaste este mes, del más reciente al más viejo.
-          <button type="button" @click="ayudaAbierta = false" aria-label="Cerrar ayuda"
-            class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition">
-            <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
+    <span class="flex items-center justify-between gap-1 mb-2 px-1">
+      <span class="flex items-center gap-1">
+        <h2 class="text-[13px] font-semibold text-slate-500 tracking-wide">Movimientos</h2>
+        <span class="relative inline-flex" x-data="{ ayudaAbierta: false }">
+          <button type="button" @click.stop="ayudaAbierta = !ayudaAbierta" @mouseenter="!esMobile && (ayudaAbierta = true)"
+            :aria-expanded="ayudaAbierta" aria-label="Ayuda sobre esta sección"
+            class="w-5 h-5 rounded-full flex items-center justify-center text-slate-300 hover:bg-slate-100 hover:text-slate-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9.5"/>
+              <path d="M9.1 9a3 3 0 0 1 5.75 1.1c0 1.9-2.85 2.85-2.85 2.85"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
           </button>
-        </div>
+          <div x-show="ayudaAbierta" x-cloak x-transition.opacity.duration.150ms @click.outside="ayudaAbierta = false"
+            class="absolute z-30 top-full left-1/2 -translate-x-1/2 mt-2 w-56 max-w-[85vw] rounded-xl bg-slate-900 text-white text-xs leading-relaxed p-3 pr-8 shadow-[0_4px_16px_rgba(15,23,42,0.25)]">
+            Todo lo que cargaste este mes, del más reciente al más viejo.
+            <button type="button" @click="ayudaAbierta = false" aria-label="Cerrar ayuda"
+              class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition">
+              <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </span>
       </span>
+      <button x-show="movimientos.length > 0" x-cloak type="button" @click="exportarCSV()" aria-label="Exportar movimientos de este mes a CSV" title="Exportar CSV"
+        class="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">
+        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 3v12"/>
+          <path d="M7 10l5 5 5-5"/>
+          <path d="M4 19h16"/>
+        </svg>
+        Exportar CSV
+      </button>
     </span>
     <div class="space-y-2 md:grid md:grid-cols-2 md:gap-2 md:space-y-0">
       <template x-for="mov in movimientos" :key="mov.id">
@@ -1056,6 +1067,6 @@
 </div>
 
 <script src="config.js"></script>
-<script src="app.js?v=20260911k"></script>
+<script src="app.js?v=20260913b"></script>
 </body>
 </html>
