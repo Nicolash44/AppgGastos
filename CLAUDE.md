@@ -165,9 +165,12 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
   Redactados en base a la Ley 25.326 (Argentina) — no son un documento revisado por un
   abogado, sirven como piso razonable, no como garantía legal completa.
 - Meta tags Open Graph pendientes (cómo se ve el link al compartirlo).
-- Accesibilidad: `maximum-scale=1` en el viewport bloquea el zoom (mal para baja visión),
-  faltan `aria-label` en botones de ícono (las "×" de borrar), y falta anillo de foco visible
-  en chips/toggles para navegación por teclado.
+- Accesibilidad: el viewport ya permite zoom y los botones de ícono ya tienen `aria-label`.
+  Falta anillo de foco visible en chips/toggles para navegación por teclado. El borde en
+  reposo de inputs y chips sin seleccionar pasó de `slate-200` (~1.2:1 de contraste, casi
+  invisible) a un tono custom `#8594aa` (~3:1, WCAG 1.4.11) — regenerado en
+  `vendor/tailwind-output.css` con la CLI de Tailwind v3 (`tailwind.config.js` +
+  `tailwind-input.css`), no a mano.
 - Mercado Pago está en **producción** con credenciales reales — el flujo de alta,
   primer pago y cancelación ya se probó de punta a punta, con pago real y con el
   problema del navegador in-app de iOS resuelto (`target="_blank"` en el link de
