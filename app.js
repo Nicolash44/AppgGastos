@@ -209,6 +209,7 @@ function gastosApp() {
     cuenta: localStorage.getItem("cuenta_ultima") || "personal", // "laburo" | "personal", para el próximo movimiento a cargar
     cuentaFiltro: "todos", // "laburo" | "personal" | "todos", para ver el dashboard
     spotlightCuentas: false, // señala los tabs recién aparecidos al activar la separación de cuentas
+    mostrarOnboardingMonotributista: false, // pregunta única en el primer login
     movimientos: [],
     movAEliminar: null,
     editandoMovId: null,
@@ -408,6 +409,14 @@ function gastosApp() {
       this.setTipo(ingresos > gastos ? "ingreso" : "gasto");
 
       this.cargandoInicial = false;
+
+      // Onboarding de "¿sos monotributista?" una sola vez: la feature de separar
+      // laburo/personal quedó casi invisible detrás de un ícono en el header, así que
+      // en vez de depender de que alguien lo encuentre, se pregunta directo al entrar.
+      if (!this.bloqueado && this.perfil && !this.perfil.monotributista_preguntado) {
+        this.mostrarOnboardingMonotributista = true;
+      }
+
       await this.cargarEvolucion();
       await this.cargarComparacion();
 
@@ -444,7 +453,7 @@ function gastosApp() {
     async cargarPerfil() {
       const { data, error } = await supabaseClient
         .from("perfiles")
-        .select("trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id, codigo_referido, es_monotributista")
+        .select("trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id, codigo_referido, es_monotributista, monotributista_preguntado")
         .single();
       if (!error) this.perfil = data;
     },
@@ -848,6 +857,17 @@ function gastosApp() {
     setCuenta(valor) {
       this.cuenta = valor;
       localStorage.setItem("cuenta_ultima", valor);
+    },
+
+    // Responde la pregunta de onboarding (una sola vez, ver cargarDatosApp). El RPC
+    // marca monotributista_preguntado = true sea cual sea la respuesta, así no vuelve
+    // a aparecer.
+    async responderOnboardingMonotributista(valor) {
+      this.mostrarOnboardingMonotributista = false;
+      const { error } = await supabaseClient.rpc("set_es_monotributista", { p_valor: valor });
+      if (error) return;
+      this.perfil = { ...this.perfil, es_monotributista: valor, monotributista_preguntado: true };
+      if (valor) this.spotlightCuentas = true;
     },
 
     // Activa/desactiva la separación laburo/personal (feature gateada: solo la ven quienes
