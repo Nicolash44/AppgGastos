@@ -520,6 +520,23 @@
         <p x-show="usuariosAdmin.length === 0" class="text-center text-slate-500 text-sm py-6">Sin usuarios todavía</p>
         <p x-show="usuariosAdmin.length > 0 && usuariosAdminFiltrados.length === 0" class="text-center text-slate-500 text-sm py-6">Ningún usuario coincide con esa búsqueda</p>
       </div>
+
+      <h2 class="text-lg font-bold text-slate-900 mt-8 mb-4">Comisiones por referido</h2>
+      <div class="space-y-2">
+        <template x-for="p in pagosReferidos" :key="p.id">
+          <div class="bg-slate-50 rounded-xl p-3">
+            <div class="font-medium text-slate-900 text-sm" x-text="p.codigo_referido"></div>
+            <div class="text-xs text-slate-500" x-text="emailDeUsuario(p.user_id)"></div>
+            <div class="text-xs text-slate-500">
+              <span x-text="p.medio === 'mercadopago' ? 'Mercado Pago' : 'Transferencia'"></span>
+              · <span x-text="p.es_primer_pago ? 'Primer pago' : 'Renovación'"></span>
+              · <span x-text="p.monto ? '$' + Number(p.monto).toLocaleString('es-AR') : ''"></span>
+              · <span x-text="new Date(p.creado_en).toLocaleDateString('es-AR')"></span>
+            </div>
+          </div>
+        </template>
+        <p x-show="pagosReferidos.length === 0" class="text-center text-slate-500 text-sm py-6">Sin comisiones todavía</p>
+      </div>
     </div>
   </div>
 

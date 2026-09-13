@@ -60,6 +60,23 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
   CUIT/DNI ni nombre del comprador antes de pagar — esos campos van a AFIP como "NR"
   (No Requerido) al facturar. No hay ningún paso ni formulario de datos personales en
   el flujo de pago por este motivo.
+- **Códigos de referido / comisiones de vendedores** (`010_referidos.sql`): lista fija
+  en `public.vendedores` (codigo, nombre, activo), la administrás vos a mano desde el
+  Table Editor de Supabase — no hay panel para crearlos desde la app. Un link tipo
+  `ingresos247.com/?ref=CODIGO` precarga el código; `app.js` lo guarda en
+  `localStorage` (`ref_pendiente`) para no perderlo si el registro termina siendo con
+  Google. Con email/contraseña se manda como metadata del `signUp` y el trigger
+  `crear_perfil_nuevo_usuario` lo graba en `perfiles.codigo_referido` al crear el
+  perfil; con Google (no soporta metadata custom en `signInWithOAuth`) hay un respaldo:
+  ya logueado, `asignarReferidoPendiente()` llama a la función
+  `registrar_codigo_referido()`. Queda fijo para siempre una vez asignado — no se puede
+  pisar después. Cada vez que se acredita un pago (primero o renovación, por Mercado
+  Pago o transferencia) de alguien con código asignado, se inserta una fila en
+  `public.pagos_referidos` — desde `mp-webhook`, desde la acción "confirmar" de
+  `mp-suscripcion`, y desde `confirmar_pago()` (transferencia). Un Database Webhook en
+  esa tabla (evento INSERT) dispara la Edge Function `notificar-referido`, que te manda
+  un mail por Resend; el panel admin también lista esas filas directo (tiene su propia
+  policy de select para `es_admin()`, no hace falta una RPC extra para leerlas).
 - **Mercado Pago** (`007_mercadopago.sql`, `supabase/functions/mp-suscripcion/`,
   `supabase/functions/mp-webhook/`): usa el modelo Preapproval (suscripción mensual).
   `mp-suscripcion` la llama la app logueada para crear (`action: "crear"`, devuelve un

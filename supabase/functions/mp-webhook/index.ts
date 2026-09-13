@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     // Suma un mes a pagado_hasta (desde el vencimiento actual si sigue vigente,
     // si no desde hoy) y registra el payment_id para no acreditar dos veces si
     // Mercado Pago reenvía la misma notificación.
-    async function acreditarPago(userId: string, paymentId: string) {
+    async function acreditarPago(userId: string, paymentId: string, monto?: number) {
       const { error: insertError } = await supabaseAdmin
         .from("pagos_mp")
         .insert({ payment_id: paymentId, user_id: userId });
@@ -46,12 +46,13 @@ Deno.serve(async (req) => {
 
       const { data: perfil } = await supabaseAdmin
         .from("perfiles")
-        .select("pagado_hasta")
+        .select("pagado_hasta, codigo_referido")
         .eq("user_id", userId)
         .single();
 
-      const base = perfil?.pagado_hasta && new Date(perfil.pagado_hasta) > new Date()
-        ? new Date(perfil.pagado_hasta)
+      const pagadoHastaAnterior = perfil?.pagado_hasta ?? null;
+      const base = pagadoHastaAnterior && new Date(pagadoHastaAnterior) > new Date()
+        ? new Date(pagadoHastaAnterior)
         : new Date();
       const nuevoVencimiento = new Date(base);
       nuevoVencimiento.setMonth(nuevoVencimiento.getMonth() + 1);
@@ -60,6 +61,18 @@ Deno.serve(async (req) => {
         .from("perfiles")
         .update({ pagado_hasta: nuevoVencimiento.toISOString(), pago_solicitado: null })
         .eq("user_id", userId);
+
+      // Si el usuario vino con código de referido, queda registrado para pagarle la
+      // comisión al vendedor (panel admin / mail vía notificar-referido).
+      if (perfil?.codigo_referido) {
+        await supabaseAdmin.from("pagos_referidos").insert({
+          user_id: userId,
+          codigo_referido: perfil.codigo_referido,
+          medio: "mercadopago",
+          monto: monto ?? null,
+          es_primer_pago: pagadoHastaAnterior === null,
+        });
+      }
 
       return new Response("ok: pago acreditado", { status: 200 });
     }
@@ -74,7 +87,7 @@ Deno.serve(async (req) => {
         return new Response("ignorado: pago no aprobado", { status: 200 });
       }
 
-      return await acreditarPago(pago.external_reference, String(pago.id));
+      return await acreditarPago(pago.external_reference, String(pago.id), pago.transaction_amount);
     }
 
     // Los pagos recurrentes de una suscripción (Preapproval) no avisan por el
@@ -93,7 +106,7 @@ Deno.serve(async (req) => {
         return new Response("ignorado: pago de suscripción no aprobado", { status: 200 });
       }
 
-      return await acreditarPago(String(ap.external_reference), String(ap.payment.id));
+      return await acreditarPago(String(ap.external_reference), String(ap.payment.id), ap.payment.transaction_amount);
     }
 
     if (type === "subscription_preapproval" || type === "preapproval") {

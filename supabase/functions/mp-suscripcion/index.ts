@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
       // siguientes, cuando no hay nadie mirando la pantalla para este llamado.
       const { data: perfil, error: perfilError } = await supabaseAdmin
         .from("perfiles")
-        .select("mp_preapproval_id, pagado_hasta")
+        .select("mp_preapproval_id, pagado_hasta, codigo_referido")
         .eq("user_id", user.id)
         .single();
 
@@ -126,8 +126,9 @@ Deno.serve(async (req) => {
       if (!insertError) {
         // Si insertError existe, ya lo había acreditado el webhook (o un
         // llamado anterior a este mismo action) — no hace falta sumar de nuevo.
-        const base = perfil.pagado_hasta && new Date(perfil.pagado_hasta) > new Date()
-          ? new Date(perfil.pagado_hasta)
+        const pagadoHastaAnterior = perfil.pagado_hasta;
+        const base = pagadoHastaAnterior && new Date(pagadoHastaAnterior) > new Date()
+          ? new Date(pagadoHastaAnterior)
           : new Date();
         const nuevoVencimiento = new Date(base);
         nuevoVencimiento.setMonth(nuevoVencimiento.getMonth() + 1);
@@ -136,6 +137,18 @@ Deno.serve(async (req) => {
           .from("perfiles")
           .update({ pagado_hasta: nuevoVencimiento.toISOString(), pago_solicitado: null })
           .eq("user_id", user.id);
+
+        // Si el usuario vino con código de referido, queda registrado para pagarle la
+        // comisión al vendedor (panel admin / mail vía notificar-referido).
+        if (perfil.codigo_referido) {
+          await supabaseAdmin.from("pagos_referidos").insert({
+            user_id: user.id,
+            codigo_referido: perfil.codigo_referido,
+            medio: "mercadopago",
+            monto: ultimoPago.payment.transaction_amount ?? null,
+            es_primer_pago: pagadoHastaAnterior === null,
+          });
+        }
       }
 
       return new Response(JSON.stringify({ confirmado: true }), { status: 200, headers: CORS_HEADERS });

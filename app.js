@@ -1,5 +1,13 @@
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Guarda el código de referido de la URL (?ref=CODIGO) en localStorage para no perderlo
+// si el usuario se registra con Google: esa redirección no permite mandar metadata
+// custom en el signUp, a diferencia del registro con email/contraseña.
+(function guardarRefDeUrl() {
+  const ref = new URLSearchParams(window.location.search).get("ref");
+  if (ref) localStorage.setItem("ref_pendiente", ref.trim());
+})();
+
 // Estado compartido entre loginApp y gastosApp: fuerza la pantalla de "nueva contraseña"
 // aunque el link de recuperación ya haya dejado una sesión activa.
 document.addEventListener("alpine:init", () => {
@@ -97,11 +105,13 @@ function loginApp() {
         return;
       }
 
+      const refPendiente = localStorage.getItem("ref_pendiente");
       const { data, error } = await supabaseClient.auth.signUp({
         email: this.email,
         password: this.password,
         options: {
-          emailRedirectTo: window.location.origin + window.location.pathname
+          emailRedirectTo: window.location.origin + window.location.pathname,
+          ...(refPendiente ? { data: { codigo_referido: refPendiente } } : {})
         }
       });
 
@@ -182,6 +192,7 @@ function gastosApp() {
     mostrarPagoPendiente: false,
     mostrarAdmin: false,
     usuariosAdmin: [],
+    pagosReferidos: [],
     busquedaAdmin: "",
     tipo: "gasto",
     categoria: "",
@@ -318,6 +329,7 @@ function gastosApp() {
 
     async arrancar() {
       await this.cargarPerfil();
+      await this.asignarReferidoPendiente();
 
       // Volvió del checkout de Mercado Pago: el webhook puede tardar unos segundos
       // en acreditar, así que reintentamos un rato antes de mostrar bloqueo.
@@ -414,9 +426,23 @@ function gastosApp() {
     async cargarPerfil() {
       const { data, error } = await supabaseClient
         .from("perfiles")
-        .select("trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id")
+        .select("trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id, codigo_referido")
         .single();
       if (!error) this.perfil = data;
+    },
+
+    // Respaldo para cuando el registro fue con Google: signInWithOAuth no permite
+    // mandar metadata custom en el signUp, así que si quedó un ?ref= guardado en
+    // localStorage (ver guardarRefDeUrl) y todavía no tiene código asignado, lo
+    // asignamos ahora que ya está logueado.
+    async asignarReferidoPendiente() {
+      const ref = localStorage.getItem("ref_pendiente");
+      if (!ref) return;
+      if (this.perfil && !this.perfil.codigo_referido) {
+        const { error } = await supabaseClient.rpc("registrar_codigo_referido", { p_codigo: ref });
+        if (!error) this.perfil = { ...this.perfil, codigo_referido: ref };
+      }
+      localStorage.removeItem("ref_pendiente");
     },
 
     async marcarPagoTransferido() {
@@ -485,10 +511,27 @@ function gastosApp() {
       if (!error) this.usuariosAdmin = data;
     },
 
+    // pagos_referidos tiene su propia policy de select para admin (es_admin()), así
+    // que se puede leer directo de la tabla sin necesitar una RPC extra.
+    async cargarPagosReferidos() {
+      const { data, error } = await supabaseClient
+        .from("pagos_referidos")
+        .select("*")
+        .order("creado_en", { ascending: false });
+      if (!error) this.pagosReferidos = data;
+    },
+
+    // El email no está en pagos_referidos (solo user_id) — lo resuelve buscando en
+    // usuariosAdmin, que ya se cargó en paralelo al abrir el panel.
+    emailDeUsuario(userId) {
+      return this.usuariosAdmin.find(u => u.user_id === userId)?.email ?? userId;
+    },
+
     abrirAdmin() {
       this.mostrarAdmin = true;
       this.busquedaAdmin = "";
       this.cargarUsuariosAdmin();
+      this.cargarPagosReferidos();
     },
 
     get usuariosAdminFiltrados() {
