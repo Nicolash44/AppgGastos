@@ -19,6 +19,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import forge from "npm:node-forge@1";
 import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1";
+import QRCode from "npm:qrcode@1";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -264,15 +265,40 @@ async function solicitarCAE(
   return { cae, vencimiento: `${vencimiento.slice(0, 4)}-${vencimiento.slice(4, 6)}-${vencimiento.slice(6, 8)}` };
 }
 
-// PDF de la factura (no es el layout oficial de AFIP con el "código de barras"
-// obligatorio, pero trae todos los datos obligatorios en texto: CAE, vencimiento,
-// punto de venta, número, fecha, importe, leyenda "A CONSUMIDOR FINAL").
+// Arma la URL con el QR que exige AFIP en todo comprobante electrónico desde la RG
+// 4892/2020 (no es opcional ni depende de si el producto es digital o físico — aplica
+// a cualquier factura electrónica). El QR apunta al validador público de AFIP con los
+// datos del comprobante codificados en base64 dentro del query param "p".
+function urlQrAfip(datos: { fechaISO: string; numero: number; importe: number; cae: string }): string {
+  const payload = {
+    ver: 1,
+    fecha: datos.fechaISO,
+    cuit: Number(AFIP_CUIT),
+    ptoVta: AFIP_PUNTO_VENTA,
+    tipoCmp: 6, // Factura B
+    nroCmp: datos.numero,
+    importe: datos.importe,
+    moneda: "PES",
+    ctz: 1,
+    tipoDocRec: 99, // Consumidor Final sin identificar
+    nroDocRec: 0,
+    tipoCodAut: "E",
+    codAut: Number(datos.cae),
+  };
+  const base64 = btoa(JSON.stringify(payload));
+  return `https://www.afip.gob.ar/fe/qr/?p=${base64}`;
+}
+
+// PDF de la factura, con el QR obligatorio de AFIP (RG 4892/2020) además de todos los
+// datos en texto: CAE, vencimiento, punto de venta, número, fecha, importe, leyenda
+// "A CONSUMIDOR FINAL".
 async function generarPdf(datos: {
   numero: number;
   cae: string;
   vencimiento: string;
   importe: number;
-  fecha: string; // dd/mm/yyyy
+  fecha: string; // dd/mm/yyyy, para mostrar
+  fechaISO: string; // yyyy-mm-dd, para el QR
 }): Promise<Uint8Array> {
   const NAVY = rgb(0.06, 0.09, 0.16); // #0F172A
   const EMERALD = rgb(0.06, 0.72, 0.51); // #10B981
@@ -325,8 +351,22 @@ async function generarPdf(datos: {
   page.drawText(`$${datos.importe.toFixed(2)}`, { x: 40, y: y - 10, size: 18, font: bold, color: EMERALD });
   y -= 60;
 
-  linea(`CAE: ${datos.cae}`, { color: SLATE });
-  linea(`Vencimiento de CAE: ${datos.vencimiento}`, { color: SLATE, dy: 30 });
+  // QR obligatorio de AFIP, abajo a la izquierda, junto al CAE.
+  try {
+    const qrUrl = urlQrAfip({ fechaISO: datos.fechaISO, numero: datos.numero, importe: datos.importe, cae: datos.cae });
+    const qrDataUrl = await QRCode.toDataURL(qrUrl, { margin: 1, width: 200 });
+    const qrPngBytes = Uint8Array.from(atob(qrDataUrl.split(",")[1]), (c) => c.charCodeAt(0));
+    const qrImg = await pdf.embedPng(qrPngBytes);
+    page.drawImage(qrImg, { x: 28, y: y - 90, width: 80, height: 80 });
+    page.drawText(`CAE: ${datos.cae}`, { x: 118, y: y - 20, size: 10, font, color: SLATE });
+    page.drawText(`Vencimiento de CAE: ${datos.vencimiento}`, { x: 118, y: y - 36, size: 10, font, color: SLATE });
+  } catch (qrError) {
+    // sin QR no debería pasar nunca, pero si falla no tiene que romper toda la
+    // factura — al menos el CAE en texto ya alcanza para validarla a mano.
+    console.error("no se pudo generar el QR:", qrError);
+    linea(`CAE: ${datos.cae}`, { color: SLATE });
+    linea(`Vencimiento de CAE: ${datos.vencimiento}`, { color: SLATE, dy: 30 });
+  }
 
   page.drawText("Comprobante autorizado por AFIP.", { x: 28, y: 30, size: 8, font, color: SLATE });
 
@@ -402,12 +442,14 @@ Deno.serve(async (req) => {
     try {
       const { data: userData } = await supabaseAdmin.auth.admin.getUserById(user_id);
       if (userData?.user?.email) {
+        const fechaISO = fechaAfip(new Date()).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
         const pdfBytes = await generarPdf({
           numero: nuevoNro,
           cae,
           vencimiento,
           importe,
-          fecha: fechaAfip(new Date()).replace(/(\d{4})(\d{2})(\d{2})/, "$3/$2/$1"),
+          fecha: fechaISO.split("-").reverse().join("/"),
+          fechaISO,
         });
         await mandarFacturaPorMail(userData.user.email, pdfBytes, nuevoNro);
       }
