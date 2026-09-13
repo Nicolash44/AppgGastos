@@ -303,14 +303,19 @@ async function generarPdf(datos: {
   const NAVY = rgb(0.06, 0.09, 0.16); // #0F172A
   const EMERALD = rgb(0.06, 0.72, 0.51); // #10B981
   const SLATE = rgb(0.39, 0.45, 0.55); // #64748B
+  const WHITE = rgb(1, 1, 1);
+  const LINE = rgb(0.88, 0.9, 0.94);
+  const BG = rgb(0.97, 0.98, 0.99);
 
+  const PAGE_W = 420;
+  const PAGE_H = 460;
+  const M = 28; // margen izquierdo/derecho, todo se alinea contra esto
+  const CONTENT_W = PAGE_W - M * 2;
   const pdf = await PDFDocument.create();
-  const page = pdf.addPage([420, 560]);
-  const { width } = page.getSize();
+  const page = pdf.addPage([PAGE_W, PAGE_H]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
 
-  // Header con logo (se busca en vivo del sitio, así no hay que embeber nada acá).
   let logoImg = null;
   try {
     const logoRes = await fetch("https://ingresos247.com/logo-icon.png");
@@ -319,56 +324,79 @@ async function generarPdf(datos: {
     // sin logo no rompe el PDF, sigue sin él
   }
 
-  page.drawRectangle({ x: 0, y: 500, width, height: 60, color: NAVY });
+  // Header navy, logo+nombre centrados verticalmente en la franja.
+  const HEADER_H = 68;
+  const headerMidY = PAGE_H - HEADER_H / 2;
+  page.drawRectangle({ x: 0, y: PAGE_H - HEADER_H, width: PAGE_W, height: HEADER_H, color: NAVY });
   if (logoImg) {
-    page.drawImage(logoImg, { x: 28, y: 514, width: 32, height: 32 });
-    page.drawText("Ingresos247", { x: 68, y: 526, size: 16, font: bold, color: rgb(1, 1, 1) });
+    page.drawImage(logoImg, { x: M, y: headerMidY - 11, width: 22, height: 22 });
+    page.drawText("Ingresos247", { x: M + 30, y: headerMidY - 6, size: 14, font: bold, color: WHITE });
   } else {
-    page.drawText("Ingresos247", { x: 28, y: 526, size: 16, font: bold, color: rgb(1, 1, 1) });
+    page.drawText("Ingresos247", { x: M, y: headerMidY - 6, size: 14, font: bold, color: WHITE });
   }
 
-  // Recuadro "Factura B" tipo AFIP, arriba a la derecha.
-  page.drawRectangle({ x: width - 110, y: 470, width: 82, height: 44, borderColor: NAVY, borderWidth: 1.2 });
-  page.drawText("FACTURA", { x: width - 102, y: 500, size: 9, font: bold, color: NAVY });
-  page.drawText("B", { x: width - 74, y: 478, size: 20, font: bold, color: NAVY });
+  // Recuadro con la letra del comprobante: AFIP exige que vaya arriba, centrado
+  // horizontalmente — no es solo estética, es parte de la estructura obligatoria.
+  const boxW = 50, boxH = 50;
+  const boxX = PAGE_W / 2 - boxW / 2;
+  const boxY = headerMidY - boxH / 2;
+  page.drawRectangle({ x: boxX, y: boxY, width: boxW, height: boxH, color: WHITE, borderColor: NAVY, borderWidth: 1.4 });
+  page.drawText("B", { x: boxX + boxW / 2 - 6.5, y: boxY + boxH / 2 - 9, size: 20, font: bold, color: NAVY });
+  page.drawText("COD. 06", { x: boxX + boxW / 2 - 15, y: PAGE_H - HEADER_H - 16, size: 6, font, color: SLATE });
 
-  let y = 460;
-  const linea = (texto: string, opts: { size?: number; f?: typeof font; dy?: number; color?: typeof NAVY } = {}) => {
-    page.drawText(texto, { x: 28, y, size: opts.size ?? 11, font: opts.f ?? font, color: opts.color ?? NAVY });
-    y -= opts.dy ?? 18;
-  };
+  let y = PAGE_H - HEADER_H - boxH / 2 - 20;
 
-  linea(`CUIT: ${AFIP_CUIT}`, { color: SLATE, dy: 16 });
-  linea(`Punto de Venta ${String(AFIP_PUNTO_VENTA).padStart(4, "0")} — Comprobante N° ${String(datos.numero).padStart(8, "0")}`, { color: SLATE, dy: 16 });
-  linea(`Fecha de emisión: ${datos.fecha}`, { color: SLATE, dy: 28 });
+  // Fila de datos: CUIT a la izquierda, fecha a la derecha, misma línea de base.
+  page.drawText(`CUIT ${AFIP_CUIT}`, { x: M, y, size: 9, font, color: SLATE });
+  const fechaTxt = `Fecha de emisión: ${datos.fecha}`;
+  page.drawText(fechaTxt, { x: PAGE_W - M - font.widthOfTextAtSize(fechaTxt, 9), y, size: 9, font, color: SLATE });
+  y -= 16;
+  page.drawText(`Punto de Venta ${String(AFIP_PUNTO_VENTA).padStart(4, "0")}`, { x: M, y, size: 9, font, color: SLATE });
+  const nroTxt = `Comprobante N° ${String(datos.numero).padStart(8, "0")}`;
+  page.drawText(nroTxt, { x: PAGE_W - M - font.widthOfTextAtSize(nroTxt, 9), y, size: 9, font, color: SLATE });
+  y -= 20;
 
-  page.drawLine({ start: { x: 28, y: y + 8 }, end: { x: width - 28, y: y + 8 }, thickness: 0.5, color: SLATE });
-  linea("A CONSUMIDOR FINAL", { f: bold, dy: 22 });
-  linea("Concepto: Suscripción mensual Ingresos247", { dy: 30 });
+  page.drawLine({ start: { x: M, y }, end: { x: PAGE_W - M, y }, thickness: 0.75, color: LINE });
+  y -= 22;
 
-  page.drawRectangle({ x: 28, y: y - 14, width: width - 56, height: 40, color: rgb(0.94, 0.98, 0.96) });
-  page.drawText("Importe total", { x: 40, y: y + 6, size: 10, font, color: SLATE });
-  page.drawText(`$${datos.importe.toFixed(2)}`, { x: 40, y: y - 10, size: 18, font: bold, color: EMERALD });
-  y -= 60;
+  page.drawText("A CONSUMIDOR FINAL", { x: M, y, size: 11, font: bold, color: NAVY });
+  y -= 18;
+  page.drawText("Suscripción mensual Ingresos247", { x: M, y, size: 10, font, color: SLATE });
+  y -= 26;
 
-  // QR obligatorio de AFIP, abajo a la izquierda, junto al CAE.
+  // Total, en caja centrada de ancho completo, número centrado.
+  const totalBoxH = 44;
+  page.drawRectangle({ x: M, y: y - totalBoxH, width: CONTENT_W, height: totalBoxH, color: BG });
+  page.drawText("IMPORTE TOTAL", { x: M, y: y - 16, size: 8, font: bold, color: SLATE });
+  const totalTxt = `$${datos.importe.toFixed(2)}`;
+  page.drawText(totalTxt, { x: PAGE_W / 2 - font.widthOfTextAtSize(totalTxt, 20) / 2, y: y - 34, size: 20, font: bold, color: EMERALD });
+  y -= totalBoxH + 22;
+
+  page.drawLine({ start: { x: M, y }, end: { x: PAGE_W - M, y }, thickness: 0.75, color: LINE });
+  y -= 20;
+
+  // QR obligatorio de AFIP (RG 4892/2020), con el CAE alineado verticalmente al centro del QR.
+  const qrSize = 64;
   try {
     const qrUrl = urlQrAfip({ fechaISO: datos.fechaISO, numero: datos.numero, importe: datos.importe, cae: datos.cae });
     const qrDataUrl = await QRCode.toDataURL(qrUrl, { margin: 1, width: 200 });
     const qrPngBytes = Uint8Array.from(atob(qrDataUrl.split(",")[1]), (c) => c.charCodeAt(0));
     const qrImg = await pdf.embedPng(qrPngBytes);
-    page.drawImage(qrImg, { x: 28, y: y - 90, width: 80, height: 80 });
-    page.drawText(`CAE: ${datos.cae}`, { x: 118, y: y - 20, size: 10, font, color: SLATE });
-    page.drawText(`Vencimiento de CAE: ${datos.vencimiento}`, { x: 118, y: y - 36, size: 10, font, color: SLATE });
+    const qrTop = y;
+    page.drawImage(qrImg, { x: M, y: qrTop - qrSize, width: qrSize, height: qrSize });
+    const textX = M + qrSize + 18;
+    const textMidY = qrTop - qrSize / 2;
+    page.drawText("CAE", { x: textX, y: textMidY + 16, size: 8, font, color: SLATE });
+    page.drawText(datos.cae, { x: textX, y: textMidY + 2, size: 12, font: bold, color: NAVY });
+    page.drawText(`Vencimiento: ${datos.vencimiento}`, { x: textX, y: textMidY - 14, size: 9, font, color: SLATE });
   } catch (qrError) {
-    // sin QR no debería pasar nunca, pero si falla no tiene que romper toda la
-    // factura — al menos el CAE en texto ya alcanza para validarla a mano.
     console.error("no se pudo generar el QR:", qrError);
-    linea(`CAE: ${datos.cae}`, { color: SLATE });
-    linea(`Vencimiento de CAE: ${datos.vencimiento}`, { color: SLATE, dy: 30 });
+    page.drawText(`CAE: ${datos.cae}`, { x: M, y: y - 14, size: 10, font, color: SLATE });
+    page.drawText(`Vencimiento de CAE: ${datos.vencimiento}`, { x: M, y: y - 30, size: 10, font, color: SLATE });
   }
 
-  page.drawText("Comprobante autorizado por AFIP.", { x: 28, y: 30, size: 8, font, color: SLATE });
+  const footerTxt = "Comprobante autorizado por AFIP.";
+  page.drawText(footerTxt, { x: PAGE_W / 2 - font.widthOfTextAtSize(footerTxt, 7.5) / 2, y: 16, size: 7.5, font, color: SLATE });
 
   return await pdf.save();
 }
