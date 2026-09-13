@@ -251,6 +251,21 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
     hasta decidir a mano qué filas conservar (las demás ya son facturas reales en AFIP,
     no se pueden simplemente borrar sin evaluar si corresponde una Nota de Crédito).
 
+## Cuenta laburo/personal
+
+- `transacciones.cuenta` (`016_cuenta_laburo_personal.sql`) separa movimientos de
+  "laburo" (pensado para monotributistas/freelancers que facturan) de los
+  "personales". Default `'personal'` — todo el historial viejo quedó así, el usuario
+  reclasifica a mano si corresponde.
+- Filtro Personal/Laburo/Todos arriba del balance (`cuentaFiltro` en `app.js`) recorta
+  `movimientos` en el cliente vía el getter `movimientosFiltrados` — de ahí salen los
+  totales, el listado, las categorías más usadas y el gráfico de torta. La evolución de
+  6 meses y el comparativo de meses (que pegan a la base con queries propias, no leen
+  `movimientos`) **no** están filtrados por cuenta todavía — alcance acotado a
+  propósito, ver memoria del proyecto sobre las features pendientes de monotributo.
+- Al cargar un movimiento nuevo se recuerda la última cuenta elegida en
+  `localStorage` (`cuenta_ultima`) para no tener que tocarlo cada vez.
+
 ## Convenciones de este proyecto
 
 - Todo el copy de cara al usuario está en español rioplatense informal ("vos", no "tú").

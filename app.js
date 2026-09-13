@@ -205,6 +205,8 @@ function gastosApp() {
     categoria: "",
     detalle: "",
     monto: "",
+    cuenta: localStorage.getItem("cuenta_ultima") || "personal", // "laburo" | "personal", para el próximo movimiento a cargar
+    cuentaFiltro: "todos", // "laburo" | "personal" | "todos", para ver el dashboard
     movimientos: [],
     movAEliminar: null,
     editandoMovId: null,
@@ -240,11 +242,18 @@ function gastosApp() {
     get categoriasActuales() {
       return this.categorias[this.tipo];
     },
+    // Movimientos del mes ya cargados, recortados por la pestaña Personal/Laburo/Todos
+    // elegida arriba del dashboard. Todo lo que antes leía `movimientos` directo (totales,
+    // gráficos, listado, categorías más usadas) pasa a leer esto para respetar el filtro.
+    get movimientosFiltrados() {
+      if (this.cuentaFiltro === "todos") return this.movimientos;
+      return this.movimientos.filter(m => m.cuenta === this.cuentaFiltro);
+    },
     // Las más usadas este mes primero, para no forzar a escanear una fila
     // larga de chips cada vez que se carga un movimiento.
     get categoriasOrdenadas() {
       const usos = {};
-      this.movimientos.forEach(m => {
+      this.movimientosFiltrados.forEach(m => {
         if (m.tipo === this.tipo) usos[m.categoria] = (usos[m.categoria] || 0) + 1;
       });
       return [...this.categoriasActuales].sort((a, b) => (usos[b.nombre] || 0) - (usos[a.nombre] || 0));
@@ -259,10 +268,10 @@ function gastosApp() {
       return this.categoria && this.monto && parseFloat(this.monto) > 0;
     },
     get totalIngresos() {
-      return this.movimientos.filter(m => m.tipo === "ingreso").reduce((s, m) => s + Number(m.monto), 0);
+      return this.movimientosFiltrados.filter(m => m.tipo === "ingreso").reduce((s, m) => s + Number(m.monto), 0);
     },
     get totalGastos() {
-      return this.movimientos.filter(m => m.tipo === "gasto").reduce((s, m) => s + Number(m.monto), 0);
+      return this.movimientosFiltrados.filter(m => m.tipo === "gasto").reduce((s, m) => s + Number(m.monto), 0);
     },
     get balance() {
       return this.totalIngresos - this.totalGastos;
@@ -750,7 +759,7 @@ function gastosApp() {
     },
 
     totalGastadoCategoria(nombre) {
-      return this.movimientos
+      return this.movimientosFiltrados
         .filter(m => m.tipo === "gasto" && m.categoria === nombre)
         .reduce((s, m) => s + Number(m.monto), 0);
     },
@@ -829,8 +838,14 @@ function gastosApp() {
       this.categoria = mov.categoria;
       this.detalle = mov.detalle || "";
       this.monto = String(mov.monto);
+      this.cuenta = mov.cuenta;
       this.errorMsg = "";
       document.getElementById("form-carga")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+
+    setCuenta(valor) {
+      this.cuenta = valor;
+      localStorage.setItem("cuenta_ultima", valor);
     },
 
     cancelarEdicion() {
@@ -851,7 +866,8 @@ function gastosApp() {
           tipo: this.tipo,
           categoria: this.categoria,
           detalle: this.detalle || null,
-          monto: parseFloat(this.monto)
+          monto: parseFloat(this.monto),
+          cuenta: this.cuenta
         };
         const { error } = this.editandoMovId
           ? await supabaseClient.from("transacciones").update(datos).eq("id", this.editandoMovId)
@@ -924,19 +940,20 @@ function gastosApp() {
       return Number(n).toLocaleString("es-AR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     },
     exportarCSV() {
-      if (this.movimientos.length === 0) return;
+      if (this.movimientosFiltrados.length === 0) return;
 
       const escapar = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-      const filas = [["Fecha", "Tipo", "Categoría", "Detalle", "Monto"]];
+      const filas = [["Fecha", "Tipo", "Categoría", "Detalle", "Monto", "Cuenta"]];
       // Del más viejo al más nuevo, al revés del listado en pantalla, porque
       // así se lee más natural en una planilla (orden cronológico).
-      [...this.movimientos].reverse().forEach(m => {
+      [...this.movimientosFiltrados].reverse().forEach(m => {
         filas.push([
           m.fecha,
           m.tipo === "ingreso" ? "Ingreso" : "Gasto",
           m.categoria,
           m.detalle || "",
-          m.monto
+          m.monto,
+          m.cuenta === "laburo" ? "Laburo" : "Personal"
         ]);
       });
 
@@ -956,7 +973,7 @@ function gastosApp() {
     },
 
     renderChartCategorias() {
-      const movs = this.movimientos.filter(m => m.tipo === this.tipo);
+      const movs = this.movimientosFiltrados.filter(m => m.tipo === this.tipo);
       const porCategoria = {};
       movs.forEach(g => {
         porCategoria[g.categoria] = (porCategoria[g.categoria] || 0) + Number(g.monto);
