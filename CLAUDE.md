@@ -139,6 +139,28 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
   `on delete cascade` (ver `002b_fix_cascade_delete.sql`) — sin eso, borrar un usuario de
   prueba desde el dashboard tira error.
 
+## Soporte
+
+- Sección "Soporte" en la app (ícono junto a "Mi suscripción" en el header, y un link
+  "¿Necesitás ayuda?" en la pantalla de bloqueo por trial/pago vencido — el panel de
+  soporte queda fuera del bloqueo a propósito, para que alguien sin acceso igual pueda
+  pedir ayuda). Chat simple en Alpine (`mostrarSoporte`, `mensajesSoporte`, etc. en
+  `app.js`) contra la Edge Function `soporte` (`supabase/functions/soporte/`).
+- La función tiene dos acciones: `chat` (le pasa el mensaje + historial a la API de
+  **Google Gemini** — `gemini-2.0-flash`, gratis dentro de su free tier — con un system
+  prompt que describe precios/flujo de pago/cancelación fijo en el código, para que no
+  invente datos) y `escalar` (el usuario decide a mano, con el botón "No resolví mi
+  problema, avisale al soporte", que el bot no le sirvió — no hay detección automática de
+  "no resuelto"). `escalar` manda un mail a `NOTIFY_EMAIL` (mismo secreto que ya usa
+  `notificar-pago`) con el email del usuario y el transcript completo de la conversación,
+  por Resend.
+- Como `mp-suscripcion`, usa el JWT normal de Supabase (`Verify JWT` activado por
+  default, no tocar nada en el dashboard) — la app la llama ya logueada.
+- Secreto nuevo de Edge Function: `GEMINI_API_KEY` (Google AI Studio). Si cambia el
+  precio o el flujo de pago hay que actualizar el system prompt hardcodeado en
+  `soporte/index.ts` además de los otros lugares que ya no tienen una única fuente de
+  verdad para el precio (ver Mercado Pago más abajo).
+
 ## Carpetas
 
 - `/` — el sitio tal cual se sirve (index.html, app.js, config.js, manifest.json, CNAME,
@@ -147,12 +169,13 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
   en la base real; están acá como documentación y para levantar una base nueva desde cero
   si hiciera falta (ej. un ambiente de test separado). No hay migration runner conectado —
   correrlas es copiar y pegar en el SQL Editor de Supabase a mano.
-- `/supabase/functions/notificar-pago/`, `/supabase/functions/mp-suscripcion/` y
-  `/supabase/functions/mp-webhook/` — código de las Edge Functions. Si se editan, hay que
-  volver a pegar el contenido en el editor de Supabase (Edge Functions → la función que
-  corresponda) o desplegar por CLI — este repo no tiene deploy automático configurado
-  hacia Supabase. `mp-webhook` además necesita tener "Verify JWT" desactivado a mano en
-  su configuración del dashboard (Mercado Pago la llama sin token de Supabase).
+- `/supabase/functions/notificar-pago/`, `/supabase/functions/mp-suscripcion/`,
+  `/supabase/functions/mp-webhook/` y `/supabase/functions/soporte/` — código de las Edge
+  Functions. Si se editan, hay que volver a pegar el contenido en el editor de Supabase
+  (Edge Functions → la función que corresponda) o desplegar por CLI — este repo no tiene
+  deploy automático configurado hacia Supabase. `mp-webhook` además necesita tener
+  "Verify JWT" desactivado a mano en su configuración del dashboard (Mercado Pago la
+  llama sin token de Supabase).
 - `/supabase/email-templates/` — referencia de las plantillas de mail. Ídem: cambiarlas acá
   no cambia nada hasta que se pegan a mano en el dashboard.
 

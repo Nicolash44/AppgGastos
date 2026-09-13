@@ -413,6 +413,51 @@
     </div>
   </div>
 
+  <!-- Panel de soporte: fuera del bloqueo de trial/pago, para poder pedir ayuda incluso sin acceso -->
+  <div x-show="mostrarSoporte" x-cloak class="fixed inset-0 bg-white z-30 flex flex-col">
+    <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
+      <h1 class="text-lg font-bold text-slate-900">Soporte</h1>
+      <button @click="mostrarSoporte = false" class="text-sm text-slate-500 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">Cerrar</button>
+    </div>
+
+    <div id="soporte-mensajes" class="flex-1 overflow-y-auto px-4 py-4 space-y-3 max-w-2xl w-full mx-auto">
+      <template x-for="(m, i) in mensajesSoporte" :key="i">
+        <div :class="m.rol === 'usuario' ? 'flex justify-end' : 'flex justify-start'">
+          <div :class="m.rol === 'usuario' ? 'bg-emerald-700 text-white' : 'bg-slate-100 text-slate-900'"
+            class="max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-line" x-text="m.texto"></div>
+        </div>
+      </template>
+      <div x-show="enviandoSoporte" x-cloak class="flex justify-start">
+        <div class="bg-slate-100 text-slate-500 rounded-2xl px-3.5 py-2 text-sm">Escribiendo…</div>
+      </div>
+    </div>
+
+    <div class="shrink-0 border-t border-slate-100 px-4 py-3 max-w-2xl w-full mx-auto">
+      <p x-show="soporteEscalado" x-cloak class="text-emerald-700 text-sm text-center mb-3">
+        Listo, le avisamos al soporte con el detalle de esta conversación. Te van a responder por mail.
+      </p>
+      <template x-if="!soporteEscalado">
+        <div>
+          <form @submit.prevent="enviarMensajeSoporte()" class="flex gap-2 mb-3">
+            <label for="soporte-input" class="sr-only">Escribí tu consulta</label>
+            <input id="soporte-input" type="text" x-model="inputSoporte" placeholder="Escribí tu consulta…"
+              :disabled="enviandoSoporte"
+              class="flex-1 h-11 px-4 rounded-xl border border-[#8594aa] text-base focus:outline-none focus:ring-2 focus:ring-slate-400 disabled:opacity-50">
+            <button type="submit" :disabled="enviandoSoporte || !inputSoporte.trim()"
+              class="h-11 px-4 rounded-xl bg-emerald-700 text-white font-semibold text-sm disabled:opacity-40">
+              Enviar
+            </button>
+          </form>
+          <button @click="escalarSoporte()" :disabled="escalandoSoporte"
+            class="w-full h-11 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm active:bg-slate-50 disabled:opacity-40">
+            <span x-show="!escalandoSoporte">No resolví mi problema, avisale al soporte</span>
+            <span x-show="escalandoSoporte" x-cloak>Enviando…</span>
+          </button>
+        </div>
+      </template>
+    </div>
+  </div>
+
   <!-- Pantalla de pago: bloqueo total al vencer el trial, o abierta a mano desde el aviso -->
   <div x-show="(bloqueado || mostrarPago) && !confirmandoSuscripcion" x-cloak class="min-h-screen flex items-center justify-center px-4">
     <div class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm text-center">
@@ -493,6 +538,7 @@
       </template>
 
       <p x-show="errorMsg" x-text="errorMsg" class="text-rose-600 text-sm text-center mb-3"></p>
+      <button @click="abrirSoporte()" class="text-sm text-slate-500 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded block mb-3">¿Necesitás ayuda? Contactar soporte</button>
       <button @click="logout()" class="text-sm text-slate-500 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">Salir</button>
     </div>
   </div>
@@ -621,6 +667,14 @@
           <span x-show="pagosPendientesCount > 0" x-cloak :aria-label="pagosPendientesCount + ' pagos por confirmar'"
             class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center leading-none"
             x-text="pagosPendientesCount"></span>
+        </button>
+        <button @click="abrirSoporte()" aria-label="Soporte" title="Soporte"
+          class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-slate-500 transition hover:bg-slate-50 hover:text-slate-600 active:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9.5"/>
+            <path d="M9.5 9a2.5 2.5 0 0 1 4.9.75c0 1.75-2.4 2-2.4 3.5"/>
+            <circle cx="12" cy="17" r="0.6" fill="currentColor"/>
+          </svg>
         </button>
         <button @click="mostrarPago = true" aria-label="Mi suscripción" title="Mi suscripción"
           class="shrink-0 h-8 px-2 lg:pl-2.5 lg:pr-3 rounded-full text-xs font-semibold text-slate-600 bg-slate-50 flex items-center gap-1.5 whitespace-nowrap transition hover:bg-slate-100 active:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">

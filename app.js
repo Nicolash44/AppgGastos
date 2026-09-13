@@ -191,6 +191,12 @@ function gastosApp() {
     mostrarGraciasSuscripcion: false,
     mostrarPagoPendiente: false,
     mostrarAdmin: false,
+    mostrarSoporte: false,
+    mensajesSoporte: [], // [{ rol: "usuario" | "bot", texto }]
+    inputSoporte: "",
+    enviandoSoporte: false,
+    escalandoSoporte: false,
+    soporteEscalado: false,
     usuariosAdmin: [],
     pagosReferidos: [],
     mesResumenReferidos: "",
@@ -534,6 +540,54 @@ function gastosApp() {
       if (!this.mesResumenReferidos) this.mesResumenReferidos = this.formatMesInput(new Date());
       this.cargarUsuariosAdmin();
       this.cargarPagosReferidos();
+    },
+
+    abrirSoporte() {
+      this.mostrarSoporte = true;
+      if (this.mensajesSoporte.length === 0) {
+        this.mensajesSoporte.push({
+          rol: "bot",
+          texto: "¡Hola! Contame qué problema tenés y trato de ayudarte. Si no puedo resolverlo, hay un botón abajo para avisarle directo al soporte.",
+        });
+      }
+    },
+
+    async enviarMensajeSoporte() {
+      const texto = this.inputSoporte.trim();
+      if (!texto || this.enviandoSoporte) return;
+      this.mensajesSoporte.push({ rol: "usuario", texto });
+      this.inputSoporte = "";
+      this.enviandoSoporte = true;
+      try {
+        const { data, error } = await supabaseClient.functions.invoke("soporte", {
+          body: { action: "chat", mensaje: texto, historial: this.mensajesSoporte },
+        });
+        this.mensajesSoporte.push({
+          rol: "bot",
+          texto: !error && data?.respuesta
+            ? data.respuesta
+            : "No pude responder en este momento. Si querés, avisale directo al soporte con el botón de abajo.",
+        });
+      } finally {
+        this.enviandoSoporte = false;
+        this.$nextTick(() => {
+          const box = document.getElementById("soporte-mensajes");
+          if (box) box.scrollTop = box.scrollHeight;
+        });
+      }
+    },
+
+    async escalarSoporte() {
+      if (this.escalandoSoporte) return;
+      this.escalandoSoporte = true;
+      try {
+        const { error } = await supabaseClient.functions.invoke("soporte", {
+          body: { action: "escalar", historial: this.mensajesSoporte },
+        });
+        this.soporteEscalado = !error;
+      } finally {
+        this.escalandoSoporte = false;
+      }
     },
 
     // Comisión fija por cada suscripción acreditada (primer pago o renovación),
