@@ -444,6 +444,27 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "faltan user_id o importe" }), { status: 200, headers: CORS_HEADERS });
     }
 
+    // Idempotencia: si ya hay una factura guardada para este payment_id, no volver a
+    // pedirle un CAE nuevo a AFIP. Sin este chequeo, cualquier reintento (el cron cada
+    // 6hs sobre un pago que quedó "sin facturar" por un error de guardado, un webhook
+    // de MP reenviado, dos invocaciones simultáneas) termina emitiendo una factura real
+    // y distinta cada vez — pasó en producción: un insert fallido después de un CAE
+    // exitoso hizo que el cron reintentara el mismo pago en cada corrida.
+    if (payment_id) {
+      const { data: existente } = await supabaseAdmin
+        .from("facturas")
+        .select("numero, cae, cae_vencimiento")
+        .eq("payment_id", String(payment_id))
+        .maybeSingle();
+
+      if (existente) {
+        return new Response(
+          JSON.stringify({ ok: true, ya_facturado: true, ...existente }),
+          { status: 200, headers: CORS_HEADERS },
+        );
+      }
+    }
+
     const auth = await loginWSAA();
     const ultimoNro = await ultimoComprobante(auth);
     const nuevoNro = ultimoNro + 1;

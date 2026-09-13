@@ -213,6 +213,20 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
     o fecha del comprobante no se corresponde con el proximo a autorizar") aunque el
     pedido esté bien armado. No es un bug nuestro — se resuelve solo en unos minutos,
     y el cron de reintento existe justamente para no depender de reintentar a mano.
+  - **Bug de producción ya resuelto: facturas duplicadas reales ante AFIP.** `facturar/`
+    no tenía ningún chequeo de idempotencia — si el CAE se obtenía bien pero el
+    `insert` en `facturas` fallaba (log en consola, sin marcar nada), la fila quedaba
+    invisible para `reintentar-facturas`, que la reintentaba en cada corrida del cron
+    (cada 6hs) y conseguía un CAE **nuevo y real** cada vez. Así se llegó a mandar la
+    misma factura 7 veces a un cliente. Se arregló en dos capas: `facturar/index.ts`
+    ahora chequea `facturas` por `payment_id` antes de pedirle nada a AFIP, y
+    `014_facturas_payment_id_unico.sql` agrega un índice único parcial sobre
+    `facturas.payment_id` (ignora NULL) como barrera final contra una carrera real
+    entre dos invocaciones simultáneas. **Antes de correr esa migración en la base
+    real, revisar si ya hay `payment_id` duplicados en `facturas`** por las 7 facturas
+    ya emitidas — si los hay, la migración va a fallar con violación de constraint
+    hasta decidir a mano qué filas conservar (las demás ya son facturas reales en AFIP,
+    no se pueden simplemente borrar sin evaluar si corresponde una Nota de Crédito).
 
 ## Convenciones de este proyecto
 
