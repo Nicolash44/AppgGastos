@@ -442,7 +442,7 @@ function gastosApp() {
     async cargarPerfil() {
       const { data, error } = await supabaseClient
         .from("perfiles")
-        .select("trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id, codigo_referido")
+        .select("trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id, codigo_referido, es_monotributista")
         .single();
       if (!error) this.perfil = data;
     },
@@ -846,6 +846,16 @@ function gastosApp() {
     setCuenta(valor) {
       this.cuenta = valor;
       localStorage.setItem("cuenta_ultima", valor);
+    },
+
+    // Activa/desactiva la separación laburo/personal (feature gateada: solo la ven quienes
+    // la activan a mano desde "Mi suscripción", no aparece para nadie más por default).
+    async setEsMonotributista(valor) {
+      const { error } = await supabaseClient.rpc("set_es_monotributista", { p_valor: valor });
+      if (!error) {
+        this.perfil = { ...this.perfil, es_monotributista: valor };
+        if (!valor) this.cuentaFiltro = "todos";
+      }
     },
 
     cancelarEdicion() {
