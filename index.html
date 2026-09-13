@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260913h">
+<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260913i">
 <script defer src="vendor/alpine.min.js"></script>
 <script src="vendor/supabase.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
@@ -539,16 +539,30 @@
         </div>
       </template>
 
-      <!-- Entrada a Preferencias, no el contenido en sí: la separación laburo/personal vive
-           en su propia pantalla (mostrarPreferencias), no pegada acá abajo de la de pago. -->
-      <button x-show="!bloqueado" x-cloak @click="mostrarPago = false; mostrarPreferencias = true"
-        class="text-sm text-slate-500 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded block mb-3">
-        Preferencias de cuenta
+      <!-- Preferencias ahora tiene su propio ícono en el header (arriba de "Mi suscripción"),
+           así que acá abajo solo quedan soporte y salir — no tres acciones distintas
+           mezcladas con el mismo estilo. -->
+      <p x-show="errorMsg" x-text="errorMsg" class="text-rose-600 text-sm text-center mb-4"></p>
+      <button @click="abrirSoporte()"
+        class="w-full h-11 flex items-center justify-center gap-2 text-sm text-slate-500 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded-xl hover:bg-slate-50">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9.5"/>
+          <path d="M9.1 9a3 3 0 0 1 5.75 1.1c0 1.9-2.85 2.85-2.85 2.85"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        ¿Necesitás ayuda? Contactar soporte
       </button>
-
-      <p x-show="errorMsg" x-text="errorMsg" class="text-rose-600 text-sm text-center mb-3"></p>
-      <button @click="abrirSoporte()" class="text-sm text-slate-500 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded block mb-3">¿Necesitás ayuda? Contactar soporte</button>
-      <button @click="logout()" class="text-sm text-slate-500 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">Salir</button>
+      <div class="border-t border-slate-100 mt-2 pt-2">
+        <button @click="logout()"
+          class="w-full h-11 flex items-center justify-center gap-2 text-sm text-slate-500 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded-xl hover:bg-slate-50">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Salir
+        </button>
+      </div>
     </div>
   </div>
 
@@ -567,12 +581,19 @@
           </svg>
         </div>
         <div class="flex-1 min-w-0 pt-1">
-          <p class="text-sm font-medium text-slate-900">¿Sos monotributista o freelancer?</p>
-          <p class="text-xs text-slate-500 mt-0.5 mb-2">Separá la plata de laburo (facturación) de la personal, para no mezclarlas.</p>
-          <button @click="setEsMonotributista(!perfil.es_monotributista)"
-            class="text-xs font-semibold underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded"
-            :class="perfil.es_monotributista ? 'text-slate-500' : 'text-emerald-700'"
-            x-text="perfil.es_monotributista ? 'Desactivar separación de cuentas' : 'Activar separación de cuentas'"></button>
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-sm font-medium text-slate-900">Separar laburo y personal</p>
+            <!-- Switch real: la etiqueta queda fija, el estado se ve (y se anuncia a lectores
+                 de pantalla) en el control, no fusionado en el texto de un link. -->
+            <button type="button" role="switch" :aria-checked="perfil?.es_monotributista ?? false" aria-label="Separar laburo y personal"
+              @click="setEsMonotributista(!perfil?.es_monotributista)"
+              class="relative shrink-0 w-11 h-6 rounded-full transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-500"
+              :class="perfil?.es_monotributista ? 'bg-emerald-600' : 'bg-slate-200'">
+              <span class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+                :class="perfil?.es_monotributista ? 'translate-x-5' : 'translate-x-0'"></span>
+            </button>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">¿Sos monotributista o freelancer? Separá la plata de laburo (facturación) de la personal, para no mezclarlas.</p>
         </div>
       </div>
     </div>
@@ -709,6 +730,13 @@
             <circle cx="12" cy="12" r="9.5"/>
             <path d="M9.5 9a2.5 2.5 0 0 1 4.9.75c0 1.75-2.4 2-2.4 3.5"/>
             <circle cx="12" cy="17" r="0.6" fill="currentColor"/>
+          </svg>
+        </button>
+        <button @click="mostrarPreferencias = true" aria-label="Preferencias de cuenta" title="Preferencias de cuenta"
+          class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-slate-500 transition hover:bg-slate-50 hover:text-slate-600 active:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="7" width="18" height="13" rx="2"/>
+            <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
           </svg>
         </button>
         <button @click="mostrarPago = true" aria-label="Mi suscripción" title="Mi suscripción"
