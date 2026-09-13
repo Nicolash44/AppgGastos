@@ -1,3 +1,4 @@
 .claude/
 .impeccable/*.local.json
 .impeccable/hook.cache.json
+afip/
