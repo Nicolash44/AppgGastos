@@ -536,19 +536,26 @@ function gastosApp() {
       this.cargarPagosReferidos();
     },
 
-    // Agrupa pagos_referidos del mes elegido por vendedor, para saber cuánto
-    // pagarle a cada uno sin tener que contar fila por fila.
+    // Comisión fija por cada suscripción acreditada (primer pago o renovación),
+    // sin importar el medio de pago ni el monto real cobrado al cliente.
+    COMISION_POR_REFERIDO: 4000,
+
+    // Agrupa pagos_referidos del mes elegido (desde el día 1 hasta el último, sin
+    // invadir el mes siguiente — por eso el filtro compara el mes como string
+    // "YYYY-MM" en vez de un rango de fechas) por vendedor, para saber cuánto
+    // pagarle a cada uno: cantidad de suscripciones × $4.000.
     get resumenReferidos() {
       const porVendedor = {};
       for (const p of this.pagosReferidos) {
         if (!p.creado_en.startsWith(this.mesResumenReferidos)) continue;
         if (!porVendedor[p.codigo_referido]) {
-          porVendedor[p.codigo_referido] = { codigo: p.codigo_referido, cantidad: 0, total: 0 };
+          porVendedor[p.codigo_referido] = { codigo: p.codigo_referido, cantidad: 0 };
         }
         porVendedor[p.codigo_referido].cantidad++;
-        porVendedor[p.codigo_referido].total += Number(p.monto) || 0;
       }
-      return Object.values(porVendedor).sort((a, b) => b.total - a.total);
+      return Object.values(porVendedor)
+        .map(v => ({ ...v, total: v.cantidad * this.COMISION_POR_REFERIDO }))
+        .sort((a, b) => b.total - a.total);
     },
 
     get usuariosAdminFiltrados() {
