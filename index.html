@@ -532,7 +532,7 @@
           <div class="bg-emerald-50 rounded-xl p-3 flex justify-between items-center">
             <span class="font-medium text-slate-900 text-sm" x-text="r.codigo"></span>
             <span class="text-sm text-slate-700">
-              <span x-text="r.cantidad"></span> pago<span x-show="r.cantidad !== 1">s</span> ·
+              <span x-text="r.cantidad"></span> <span x-text="r.cantidad === 1 ? 'suscripción' : 'suscripciones'"></span> ·
               <span class="font-semibold" x-text="'$' + r.total.toLocaleString('es-AR')"></span>
             </span>
           </div>
