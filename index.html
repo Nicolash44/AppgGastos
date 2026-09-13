@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260913d">
+<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260913g">
 <script defer src="vendor/alpine.min.js"></script>
 <script src="vendor/supabase.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
@@ -537,20 +537,41 @@
         </div>
       </template>
 
-      <!-- Opt-in a la separación laburo/personal: oculto por default, pensado para
-           monotributistas/freelancers — nadie más ve esta preferencia ni el toggle que activa. -->
-      <div x-show="!bloqueado" x-cloak class="bg-slate-50 rounded-xl p-3 mb-3 text-left">
-        <p class="text-sm font-medium text-slate-900 mb-0.5">¿Sos monotributista o freelancer?</p>
-        <p class="text-xs text-slate-500 mb-2">Separá la plata de laburo (facturación) de la personal, para no mezclarlas.</p>
-        <button @click="setEsMonotributista(!perfil.es_monotributista)"
-          class="text-xs font-semibold underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded"
-          :class="perfil.es_monotributista ? 'text-slate-500' : 'text-emerald-700'"
-          x-text="perfil.es_monotributista ? 'Desactivar separación de cuentas' : 'Activar separación de cuentas'"></button>
-      </div>
+      <!-- Entrada a Preferencias, no el contenido en sí: la separación laburo/personal vive
+           en su propia pantalla (mostrarPreferencias), no pegada acá abajo de la de pago. -->
+      <button x-show="!bloqueado" x-cloak @click="mostrarPago = false; mostrarPreferencias = true"
+        class="text-sm text-slate-500 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded block mb-3">
+        Preferencias de cuenta
+      </button>
 
       <p x-show="errorMsg" x-text="errorMsg" class="text-rose-600 text-sm text-center mb-3"></p>
       <button @click="abrirSoporte()" class="text-sm text-slate-500 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded block mb-3">¿Necesitás ayuda? Contactar soporte</button>
       <button @click="logout()" class="text-sm text-slate-500 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">Salir</button>
+    </div>
+  </div>
+
+  <!-- Pantalla de Preferencias: propia, con su "‹ Volver", separada de la de pago -->
+  <div x-show="mostrarPreferencias" x-cloak class="min-h-screen flex items-center justify-center px-4">
+    <div class="bg-white rounded-2xl shadow-md p-6 w-full max-w-sm">
+      <button @click="mostrarPreferencias = false" class="text-sm text-slate-500 mb-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">‹ Volver</button>
+      <h1 class="text-lg font-bold text-slate-900 mb-4">Preferencias de cuenta</h1>
+
+      <div class="flex items-start gap-3">
+        <div class="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="7" width="18" height="13" rx="2"/>
+            <path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+        </div>
+        <div class="flex-1 min-w-0 pt-1">
+          <p class="text-sm font-medium text-slate-900">¿Sos monotributista o freelancer?</p>
+          <p class="text-xs text-slate-500 mt-0.5 mb-2">Separá la plata de laburo (facturación) de la personal, para no mezclarlas.</p>
+          <button @click="setEsMonotributista(!perfil.es_monotributista)"
+            class="text-xs font-semibold underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded"
+            :class="perfil.es_monotributista ? 'text-slate-500' : 'text-emerald-700'"
+            x-text="perfil.es_monotributista ? 'Desactivar separación de cuentas' : 'Activar separación de cuentas'"></button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -712,11 +733,19 @@
       <button @click="mesSiguiente()" :disabled="esMesActual" aria-label="Mes siguiente" class="w-8 h-8 flex items-center justify-center text-slate-500 text-lg disabled:opacity-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded-full">›</button>
     </div>
 
+    <!-- Fondo oscurecido al activar la separación de cuentas: se cierra "Mi suscripción" y
+         en vez de un simple toast, se le señala en el lugar exacto de la pantalla qué
+         apareció nuevo — clickear afuera lo cierra, igual que "Entendido". -->
+    <div x-show="spotlightCuentas" x-cloak x-transition.opacity.duration.200ms @click="spotlightCuentas = false"
+      class="fixed inset-0 bg-slate-900/70 z-20"></div>
+
     <!-- Filtro Personal / Laburo / Todos: solo para quien activó "Separar laburo y personal"
          en Mi suscripción — para el resto de los usuarios (mayoría hoy) no existe, cero
          fricción de más en la carga rápida de un movimiento. -->
-    <div x-show="perfil && perfil.es_monotributista" x-cloak class="flex items-center justify-center gap-1.5 mb-2">
-      <div role="tablist" aria-label="Filtrar por cuenta" class="flex gap-1.5">
+    <div x-show="perfil && perfil.es_monotributista" x-cloak
+      class="relative flex items-center justify-center gap-1.5 mb-2" :class="spotlightCuentas ? 'z-30' : ''">
+      <div role="tablist" aria-label="Filtrar por cuenta" class="flex gap-1.5 rounded-full transition"
+        :class="spotlightCuentas ? 'ring-4 ring-emerald-400 ring-offset-2' : ''">
         <template x-for="opcion in [{v:'todos', l:'Todos'}, {v:'personal', l:'Personal'}, {v:'laburo', l:'Laburo'}]" :key="opcion.v">
           <button role="tab" :aria-selected="cuentaFiltro === opcion.v" @click="cuentaFiltro = opcion.v; renderChartCategorias()"
             class="px-3 h-8 rounded-full text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-400"
@@ -724,6 +753,19 @@
             x-text="opcion.l"></button>
         </template>
       </div>
+
+      <!-- Callout: apunta con una flechita hacia los tabs recién resaltados -->
+      <div x-show="spotlightCuentas" x-cloak x-transition.opacity.duration.200ms
+        class="absolute z-30 top-full left-1/2 -translate-x-1/2 mt-3 w-64 max-w-[85vw] rounded-xl bg-white text-slate-900 text-sm p-3 shadow-[0_8px_24px_rgba(15,23,42,0.25)]">
+        <div class="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rotate-45"></div>
+        <p class="font-semibold mb-1">¡Se agregó esto! 👆</p>
+        <p class="text-slate-600 text-xs mb-3">Ahora podés filtrar el dashboard por Personal, Laburo o ver todo junto — y al cargar un movimiento vas a poder elegir a cuál pertenece.</p>
+        <button type="button" @click="spotlightCuentas = false"
+          class="w-full h-9 rounded-lg bg-slate-900 text-white text-xs font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+          Entendido
+        </button>
+      </div>
+
       <span class="relative inline-flex" x-data="{ ayudaAbierta: false }">
         <button type="button" @click.stop="ayudaAbierta = !ayudaAbierta" @mouseenter="!esMobile && (ayudaAbierta = true)"
           :aria-expanded="ayudaAbierta" aria-label="Ayuda sobre este filtro"
@@ -1192,12 +1234,12 @@
     x-transition:leave-end="opacity-0 translate-y-2"
     class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900 text-white text-sm rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 max-w-[calc(100%-2rem)]">
     <span x-text="toast && toast.msg"></span>
-    <button @click="deshacerToast()" class="text-emerald-400 font-semibold underline shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded">Deshacer</button>
+    <button x-show="toast && toast.onDeshacer" x-cloak @click="deshacerToast()" class="text-emerald-400 font-semibold underline shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded">Deshacer</button>
   </div>
 
 </div>
 
 <script src="config.js"></script>
-<script src="app.js?v=20260913b"></script>
+<script src="app.js?v=20260913e"></script>
 </body>
 </html>

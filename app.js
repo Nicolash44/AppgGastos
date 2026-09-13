@@ -184,6 +184,7 @@ function gastosApp() {
     perfil: null, // { trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id } | null mientras carga
     aliasPago: ALIAS_PAGO,
     mostrarPago: false,
+    mostrarPreferencias: false,
     mostrarTransferencia: false,
     procesandoMP: false,
     mpInitPoint: null,
@@ -207,6 +208,7 @@ function gastosApp() {
     monto: "",
     cuenta: localStorage.getItem("cuenta_ultima") || "personal", // "laburo" | "personal", para el próximo movimiento a cargar
     cuentaFiltro: "todos", // "laburo" | "personal" | "todos", para ver el dashboard
+    spotlightCuentas: false, // señala los tabs recién aparecidos al activar la separación de cuentas
     movimientos: [],
     movAEliminar: null,
     editandoMovId: null,
@@ -850,11 +852,24 @@ function gastosApp() {
 
     // Activa/desactiva la separación laburo/personal (feature gateada: solo la ven quienes
     // la activan a mano desde "Mi suscripción", no aparece para nadie más por default).
+    // Cierra el panel al confirmar para que el usuario vea el cambio reflejado en el
+    // dashboard al toque, en vez de quedarse en la misma pantalla sin ninguna señal.
     async setEsMonotributista(valor) {
+      this.errorMsg = "";
       const { error } = await supabaseClient.rpc("set_es_monotributista", { p_valor: valor });
-      if (!error) {
-        this.perfil = { ...this.perfil, es_monotributista: valor };
-        if (!valor) this.cuentaFiltro = "todos";
+      if (error) {
+        this.errorMsg = "No se pudo guardar el cambio. Intentá de nuevo.";
+        return;
+      }
+      this.perfil = { ...this.perfil, es_monotributista: valor };
+      this.mostrarPreferencias = false;
+      if (valor) {
+        // En vez de un toast genérico, se señala en el lugar exacto de la pantalla qué
+        // apareció nuevo — un mensaje suelto no alcanza cuando la UI recién cambió.
+        this.spotlightCuentas = true;
+      } else {
+        this.cuentaFiltro = "todos";
+        this.mostrarToast("Separación de cuentas desactivada.");
       }
     },
 
