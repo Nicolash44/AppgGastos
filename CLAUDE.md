@@ -168,23 +168,48 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
 - Accesibilidad: `maximum-scale=1` en el viewport bloquea el zoom (mal para baja visión),
   faltan `aria-label` en botones de ícono (las "×" de borrar), y falta anillo de foco visible
   en chips/toggles para navegación por teclado.
-- Mercado Pago está integrado con credenciales de **prueba** (sandbox) hasta validar el
-  flujo completo con una tarjeta de prueba. No pasar a las credenciales de producción
-  (`MP_ACCESS_TOKEN`) sin haber probado alta, primer pago y cancelación de punta a punta.
-- **Facturación electrónica AFIP (WSFEv1) — pendiente, bloqueada por trámite manual.**
-  El usuario es Responsable Inscripto pero todavía no generó el certificado digital de
-  AFIP. Falta que haga, en afip.gob.ar (no es algo que se resuelva desde este repo):
-  1. Generar un certificado digital (clave privada + CSR) en "Administrador de
-     Relaciones de Clave Fiscal" y autorizar el servicio "wsfe" (Facturación Electrónica)
-     para ese certificado.
-  2. Guardar el certificado + clave privada para pasárselos a Claude como secretos de
-     Edge Function (nunca en el repo) — se va a necesitar una nueva Edge Function
-     (ej. `facturar`) que haga login WSAA (token+sign, vence cada 12hs) y llame
-     WSFEv1 (`FECAESolicitar`) para pedir el CAE de cada pago.
-  Mientras tanto ya existen, listos para usarse cuando el certificado esté: las
-  columnas de datos del cliente en `perfiles` y la tabla `public.facturas`
-  (`009_facturacion.sql`), que guarda cada comprobante emitido (tipo, punto de venta,
-  número, CAE, vencimiento del CAE, importe) con policy de solo lectura para el usuario.
+- Mercado Pago está en **producción** con credenciales reales — el flujo de alta,
+  primer pago y cancelación ya se probó de punta a punta, con pago real y con el
+  problema del navegador in-app de iOS resuelto (`target="_blank"` en el link de
+  checkout, ver commit `787aec2`).
+- **Facturación electrónica AFIP (WSFEv1) — activa y automática desde `013_cron_reintentar_facturas.sql`.**
+  Certificado digital generado y asociado al servicio "Facturación Electrónica" para el
+  CUIT del usuario (RI), con punto de venta dedicado tipo "RECE para aplicativo y web
+  services" (distinto al de la tienda física). Solo emite **Factura B "A CONSUMIDOR
+  FINAL"** — nunca Factura A, nunca pide CUIT/DNI al cliente (ver más arriba, sección
+  de Facturación).
+  - `supabase/functions/facturar/`: función interna (sin JWT de usuario, gateada por
+    header `x-internal-secret` contra el secreto `FACTURAR_SECRET`). Hace login WSAA
+    (firma CMS/PKCS7 del TRA con `npm:node-forge`, token+sign cacheado 12hs en
+    `public.afip_ticket` porque AFIP rechaza pedir uno nuevo si ya hay uno vigente),
+    pregunta el último comprobante autorizado (`FECompUltimoAutorizado`) y pide el CAE
+    del siguiente (`FECAESolicitar`, namespace correcto `http://ar.gov.afip.dif.FEV1/`
+    — con el nombre "intuitivo" `facturaelectronica/` tira "Tag Auth no fue ingresado"
+    aunque el resto esté bien). Después arma un PDF simple con `npm:pdf-lib` (logo
+    bajado en vivo de `ingresos247.com/logo-icon.png`) y se lo manda por mail al
+    cliente con Resend. Acepta dos formatos de body: `{user_id, payment_id, importe}`
+    plano (llamada directa) o `{record: {...}}` (Database Webhook).
+    **Ojo con la fecha**: `CbteFch` tiene que calcularse en huso horario argentino, no
+    UTC — de noche en Argentina UTC ya es "mañana", y AFIP la rechaza.
+  - La llaman, con el monto real que pagó el cliente: `mp-webhook` (`acreditarPago`) y
+    `mp-suscripcion` (acción `confirmar`) para Mercado Pago; para transferencia,
+    `confirmar_pago()` inserta en `public.pagos_transferencia` (con el precio fijo de
+    transferencia × meses) y un Database Webhook (tipo **HTTP Request**, no "Supabase
+    Edge Functions" — hace falta mandar el header `x-internal-secret` a mano) dispara
+    `facturar` desde ahí.
+  - `supabase/functions/reintentar-facturas/` + el cron de `013_cron_reintentar_facturas.sql`
+    (`pg_cron` + `pg_net`, cada 6hs): compara `pagos_mp`/`pagos_transferencia` contra
+    `facturas.payment_id` y reintenta los que quedaron sin facturar — por ejemplo si
+    AFIP rechazó en el momento por el problema conocido de sus propios servidores (ver
+    abajo). **El secreto va hardcodeado en el `cron.schedule` de la migración como
+    placeholder `<FACTURAR_SECRET>`** — hay que reemplazarlo por el valor real solo al
+    pegarlo en el SQL Editor, nunca commitear el valor real.
+  - **Quirk de AFIP conocido**: sus servidores de producción están detrás de varias
+    instancias (`sr2`, `sr4`, `sr5`, `sr6`...) que a veces no sincronizan a tiempo el
+    "último número autorizado" entre ellas, y rechazan con el código 10016 ("El numero
+    o fecha del comprobante no se corresponde con el proximo a autorizar") aunque el
+    pedido esté bien armado. No es un bug nuestro — se resuelve solo en unos minutos,
+    y el cron de reintento existe justamente para no depender de reintentar a mano.
 
 ## Convenciones de este proyecto
 

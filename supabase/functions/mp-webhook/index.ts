@@ -74,6 +74,20 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Emite la Factura B por el monto real que pagó el cliente. No debe romper el
+      // acreditado del pago si AFIP falla por lo que sea — se loguea y listo, se puede
+      // reintentar a mano después.
+      if (monto) {
+        await fetch(`${SUPABASE_URL}/functions/v1/facturar`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-internal-secret": Deno.env.get("FACTURAR_SECRET") ?? "",
+          },
+          body: JSON.stringify({ user_id: userId, payment_id: paymentId, importe: monto }),
+        }).catch((e) => console.error("no se pudo facturar:", e));
+      }
+
       return new Response("ok: pago acreditado", { status: 200 });
     }
 

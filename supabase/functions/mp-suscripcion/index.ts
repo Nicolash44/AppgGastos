@@ -149,6 +149,23 @@ Deno.serve(async (req) => {
             es_primer_pago: pagadoHastaAnterior === null,
           });
         }
+
+        // Emite la Factura B por el monto real que pagó el cliente. No debe romper la
+        // confirmación del pago si AFIP falla por lo que sea.
+        if (ultimoPago.payment.transaction_amount) {
+          await fetch(`${SUPABASE_URL}/functions/v1/facturar`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-internal-secret": Deno.env.get("FACTURAR_SECRET") ?? "",
+            },
+            body: JSON.stringify({
+              user_id: user.id,
+              payment_id: paymentId,
+              importe: ultimoPago.payment.transaction_amount,
+            }),
+          }).catch((e) => console.error("no se pudo facturar:", e));
+        }
       }
 
       return new Response(JSON.stringify({ confirmado: true }), { status: 200, headers: CORS_HEADERS });
