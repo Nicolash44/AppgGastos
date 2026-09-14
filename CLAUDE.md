@@ -266,6 +266,22 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
 - Al cargar un movimiento nuevo se recuerda la última cuenta elegida en
   `localStorage` (`cuenta_ultima`) para no tener que tocarlo cada vez.
 
+## Categoría de monotributo (estimado)
+
+- `public.monotributo_categorias` (`019_monotributo_categorias.sql`): tabla de
+  referencia (`categoria`, `tope_anual`) con los topes de facturación anual de cada
+  categoría de monotributo. **Se crea vacía a propósito** — AFIP los actualiza cada 6
+  meses (enero/julio) y no hay un valor confiable para hardcodear; hay que cargarla a
+  mano desde el Table Editor con los topes vigentes (mismo patrón manual que
+  `vendedores`). Mientras esté vacía, el widget de "Categoría de monotributo" no se
+  muestra — nunca se inventa un tope.
+- Solo visible para quien activó `es_monotributista`. Suma los `ingresos` con
+  `cuenta = 'laburo'` de los **últimos 12 meses móviles** (no año calendario — mismo
+  criterio que usa AFIP para recategorizar) y busca la primera categoría, ordenada de
+  menor a mayor tope, cuyo tope alcanza para cubrir lo facturado.
+- Es una estimación explícita ("no reemplaza lo que tengas registrado en AFIP"), no un
+  dato oficial — el disclaimer está en el ícono de ayuda del widget.
+
 ## Convenciones de este proyecto
 
 - Todo el copy de cara al usuario está en español rioplatense informal ("vos", no "tú").

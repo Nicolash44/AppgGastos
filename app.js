@@ -210,6 +210,8 @@ function gastosApp() {
     cuentaFiltro: "todos", // "laburo" | "personal" | "todos", para ver el dashboard
     spotlightCuentas: false, // señala los tabs recién aparecidos al activar la separación de cuentas
     mostrarOnboardingMonotributista: false, // pregunta única en el primer login
+    monotributoCategorias: [], // topes por categoría, cargados a mano por el admin en Supabase
+    monotributoFacturado12m: 0,
     movimientos: [],
     movAEliminar: null,
     editandoMovId: null,
@@ -260,6 +262,19 @@ function gastosApp() {
         if (m.tipo === this.tipo) usos[m.categoria] = (usos[m.categoria] || 0) + 1;
       });
       return [...this.categoriasActuales].sort((a, b) => (usos[b.nombre] || 0) - (usos[a.nombre] || 0));
+    },
+    // Categoría de monotributo que corresponde según lo facturado (cuenta "laburo") en
+    // los últimos 12 meses — la primera categoría, ordenada de menor a mayor tope, cuyo
+    // tope alcanza para cubrir lo facturado. null si no hay topes cargados o si superó
+    // el tope de la categoría más alta (ahí ya no alcanza con una estimación simple).
+    get monotributoCategoriaActual() {
+      if (this.monotributoCategorias.length === 0) return null;
+      return this.monotributoCategorias.find(c => c.tope_anual >= this.monotributoFacturado12m) || null;
+    },
+    get monotributoPorcentaje() {
+      const cat = this.monotributoCategoriaActual;
+      if (!cat || cat.tope_anual <= 0) return 0;
+      return Math.min(100, Math.round((this.monotributoFacturado12m / cat.tope_anual) * 100));
     },
     get categoriasVisibles() {
       return this.mostrarTodasCategorias ? this.categoriasOrdenadas : this.categoriasOrdenadas.slice(0, 8);
@@ -419,6 +434,7 @@ function gastosApp() {
 
       await this.cargarEvolucion();
       await this.cargarComparacion();
+      await this.cargarMonotributoCategorias();
 
       // Para que el ícono de notificaciones tenga el número al toque, sin
       // tener que abrir el panel de admin primero.
@@ -813,6 +829,35 @@ function gastosApp() {
       }
     },
 
+    // Estimación de categoría de monotributo: suma los ingresos de cuenta "laburo" de
+    // los últimos 12 meses móviles (mismo criterio que usa AFIP para recategorizar, no
+    // año calendario) y la compara contra los topes cargados en monotributo_categorias.
+    async cargarMonotributoCategorias() {
+      if (!this.perfil || !this.perfil.es_monotributista) return;
+
+      const { data: topes, error: errorTopes } = await supabaseClient
+        .from("monotributo_categorias")
+        .select("categoria, tope_anual")
+        .order("tope_anual", { ascending: true });
+      if (errorTopes || !topes) return;
+      this.monotributoCategorias = topes;
+      if (topes.length === 0) return; // admin todavía no cargó los topes vigentes
+
+      const hace12Meses = new Date();
+      hace12Meses.setMonth(hace12Meses.getMonth() - 12);
+      const desde = hace12Meses.toISOString().slice(0, 10);
+
+      const { data, error } = await supabaseClient
+        .from("transacciones")
+        .select("monto")
+        .eq("tipo", "ingreso")
+        .eq("cuenta", "laburo")
+        .gte("fecha", desde);
+      if (error) return;
+
+      this.monotributoFacturado12m = data.reduce((s, m) => s + Number(m.monto), 0);
+    },
+
     async cargarEvolucion() {
       const inicio = new Date(this.mesSeleccionado.getFullYear(), this.mesSeleccionado.getMonth() - 5, 1);
       const inicioStr = inicio.toISOString().slice(0, 10);
@@ -867,7 +912,10 @@ function gastosApp() {
       const { error } = await supabaseClient.rpc("set_es_monotributista", { p_valor: valor });
       if (error) return;
       this.perfil = { ...this.perfil, es_monotributista: valor, monotributista_preguntado: true };
-      if (valor) this.spotlightCuentas = true;
+      if (valor) {
+        this.spotlightCuentas = true;
+        await this.cargarMonotributoCategorias();
+      }
     },
 
     // Activa/desactiva la separación laburo/personal (feature gateada: solo la ven quienes
@@ -887,6 +935,7 @@ function gastosApp() {
         // En vez de un toast genérico, se señala en el lugar exacto de la pantalla qué
         // apareció nuevo — un mensaje suelto no alcanza cuando la UI recién cambió.
         this.spotlightCuentas = true;
+        await this.cargarMonotributoCategorias();
       } else {
         this.cuentaFiltro = "todos";
         this.mostrarToast("Separación de cuentas desactivada.");
