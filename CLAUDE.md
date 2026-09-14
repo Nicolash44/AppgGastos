@@ -281,6 +281,19 @@ Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio 
   menor a mayor tope, cuyo tope alcanza para cubrir lo facturado.
 - Es una estimación explícita ("no reemplaza lo que tengas registrado en AFIP"), no un
   dato oficial — el disclaimer está en el ícono de ayuda del widget.
+- `perfiles.categoria_monotributo` (`020_categoria_monotributo_real.sql`): categoría real
+  declarada a mano en Preferencias, para comparar contra la estimada — si no coinciden,
+  el widget muestra un aviso ámbar. El título grande del widget SIEMPRE es la estimada
+  por lo facturado, nunca la declarada (confusión real de un usuario en producción,
+  quedó aclarado con el label "SEGÚN LO FACTURADO ACÁ" arriba del título).
+- `perfiles.facturacion_previa` / `facturacion_previa_fecha` (`021_facturacion_previa.sql`):
+  para alguien que empieza a usar la app a mitad de año fiscal y ya facturaba antes —
+  declara "facturaba $X hasta tal fecha" y ese monto se suma a los últimos 12 meses,
+  pero **decae linealmente día a día** (`monotributoPreviaVigente()` en app.js) hasta
+  llegar a $0 a los 365 días de la fecha declarada, momento en el que la ventana móvil
+  de 12 meses ya quedó completamente cubierta por movimientos reales cargados en la app.
+  Es una aproximación (asume que la facturación previa se distribuyó parejo en esos 12
+  meses), no un cálculo exacto — se lo aclara en el widget cuando está sumando algo.
 
 ## Convenciones de este proyecto
 

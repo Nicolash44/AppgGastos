@@ -210,6 +210,8 @@ function gastosApp() {
     cuentaFiltro: "todos", // "laburo" | "personal" | "todos", para ver el dashboard
     spotlightCuentas: false, // señala los tabs recién aparecidos al activar la separación de cuentas
     mostrarOnboardingMonotributista: false, // pregunta única en el primer login
+    facturacionPreviaMonto: "",
+    facturacionPreviaFecha: "",
     monotributoCategorias: [], // topes por categoría, cargados a mano por el admin en Supabase
     monotributoFacturado12m: 0,
     movimientos: [],
@@ -491,7 +493,7 @@ function gastosApp() {
     async cargarPerfil() {
       const { data, error } = await supabaseClient
         .from("perfiles")
-        .select("trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id, codigo_referido, es_monotributista, monotributista_preguntado, categoria_monotributo")
+        .select("trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id, codigo_referido, es_monotributista, monotributista_preguntado, categoria_monotributo, facturacion_previa, facturacion_previa_fecha")
         .single();
       if (!error) this.perfil = data;
     },
@@ -877,7 +879,22 @@ function gastosApp() {
         .gte("fecha", desde);
       if (error) return;
 
-      this.monotributoFacturado12m = data.reduce((s, m) => s + Number(m.monto), 0);
+      const facturadoReal = data.reduce((s, m) => s + Number(m.monto), 0);
+      this.monotributoFacturado12m = facturadoReal + this.monotributoPreviaVigente();
+    },
+
+    // Facturación previa a usar la app (declarada a mano en Preferencias), decayendo
+    // linealmente a medida que pasan los días: se declaró como "lo facturado en los 12
+    // meses hasta tal fecha", y cada día que pasa la ventana móvil de 12 meses deja
+    // atrás un día más de ese período viejo (que los movimientos reales ya van
+    // cubriendo). A los 365 días de la fecha declarada, ya no aporta nada — para
+    // entonces la ventana móvil quedó completamente cubierta por datos reales.
+    monotributoPreviaVigente() {
+      if (!this.perfil?.facturacion_previa || !this.perfil?.facturacion_previa_fecha) return 0;
+      const fecha = new Date(this.perfil.facturacion_previa_fecha + "T00:00:00");
+      const diasTranscurridos = Math.floor((new Date() - fecha) / (1000 * 60 * 60 * 24));
+      if (diasTranscurridos >= 365 || diasTranscurridos < 0) return 0;
+      return this.perfil.facturacion_previa * ((365 - diasTranscurridos) / 365);
     },
 
     async cargarEvolucion() {
@@ -940,9 +957,28 @@ function gastosApp() {
       }
     },
 
+    abrirPreferencias() {
+      this.mostrarPreferencias = true;
+      this.facturacionPreviaMonto = this.perfil?.facturacion_previa ? String(this.perfil.facturacion_previa) : "";
+      this.facturacionPreviaFecha = this.perfil?.facturacion_previa_fecha || "";
+    },
+
     async setCategoriaMonotributo(categoria) {
       const { error } = await supabaseClient.rpc("set_categoria_monotributo", { p_categoria: categoria || null });
       if (!error) this.perfil = { ...this.perfil, categoria_monotributo: categoria || null };
+    },
+
+    async setFacturacionPrevia() {
+      const monto = parseFloat(this.facturacionPreviaMonto);
+      if (!monto || monto <= 0 || !this.facturacionPreviaFecha) return;
+      const { error } = await supabaseClient.rpc("set_facturacion_previa", {
+        p_monto: monto,
+        p_fecha: this.facturacionPreviaFecha,
+      });
+      if (error) return;
+      this.perfil = { ...this.perfil, facturacion_previa: monto, facturacion_previa_fecha: this.facturacionPreviaFecha };
+      await this.cargarMonotributoCategorias();
+      this.mostrarToast("Facturación previa guardada.");
     },
 
     // Activa/desactiva la separación laburo/personal (feature gateada: solo la ven quienes

@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260913n">
+<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260913o">
 <script defer src="vendor/alpine.min.js"></script>
 <script src="vendor/supabase.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
@@ -641,6 +641,37 @@
           </template>
         </select>
       </div>
+
+      <!-- Facturación previa a usar la app: se suma a los últimos 12 meses del tracker,
+           decayendo con el tiempo (ver monotributoPreviaVigente en app.js) — para no
+           subestimar a alguien que empieza a mitad de año fiscal. -->
+      <div x-show="perfil?.es_monotributista && monotributoCategorias.length > 0" x-cloak
+        class="mt-5 pt-5 border-t border-slate-100">
+        <label for="facturacion-previa-monto" class="block text-sm font-medium text-slate-900 mb-1">
+          Facturación antes de usar la app
+        </label>
+        <p class="text-xs text-slate-500 mb-2">
+          Si ya facturabas antes de empezar a cargar acá, declarala para que el cálculo de arriba no la subestime.
+          Se va a ir descontando sola con el tiempo, a medida que cargues movimientos reales.
+        </p>
+        <div class="flex gap-2 mb-2">
+          <div class="flex-1">
+            <label for="facturacion-previa-monto" class="sr-only">Monto facturado</label>
+            <input id="facturacion-previa-monto" type="text" inputmode="decimal" x-model="facturacionPreviaMonto"
+              @input="facturacionPreviaMonto = soloNumeros(facturacionPreviaMonto)" placeholder="Monto"
+              class="w-full h-11 px-3 rounded-xl border border-[#8594aa] text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+          </div>
+          <div class="flex-1">
+            <label for="facturacion-previa-fecha" class="sr-only">Hasta qué fecha</label>
+            <input id="facturacion-previa-fecha" type="date" x-model="facturacionPreviaFecha"
+              class="w-full h-11 px-3 rounded-xl border border-[#8594aa] text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
+          </div>
+        </div>
+        <button @click="setFacturacionPrevia()" :disabled="!facturacionPreviaMonto || !facturacionPreviaFecha"
+          class="w-full h-11 rounded-xl bg-slate-900 text-white text-sm font-semibold disabled:opacity-40">
+          Guardar
+        </button>
+      </div>
     </div>
   </div>
 
@@ -777,7 +808,7 @@
             <circle cx="12" cy="17" r="0.6" fill="currentColor"/>
           </svg>
         </button>
-        <button @click="mostrarPreferencias = true" aria-label="Preferencias de cuenta" title="Preferencias de cuenta"
+        <button @click="abrirPreferencias()" aria-label="Preferencias de cuenta" title="Preferencias de cuenta"
           class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-slate-500 transition hover:bg-slate-50 hover:text-slate-600 active:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <rect x="3" y="7" width="18" height="13" rx="2"/>
@@ -1179,6 +1210,10 @@
               Facturaste $<span x-text="formatMonto(monotributoFacturado12m)"></span> en los últimos 12 meses,
               de un tope de $<span x-text="formatMonto(monotributoCategoriaActual.tope_anual)"></span> para tu categoría.
             </p>
+            <p x-show="monotributoPreviaVigente() > 0" x-cloak class="text-xs text-slate-400 mb-2">
+              Incluye $<span x-text="formatMonto(monotributoPreviaVigente())"></span> de tu facturación previa declarada
+              (se va descontando sola con el tiempo).
+            </p>
             <!-- Lo que importa no es el % suelto, sino de cara a qué fecha te evalúa ARCA -->
             <div class="rounded-lg bg-slate-50 px-3 py-2 flex items-center gap-2">
               <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1408,6 +1443,6 @@
 </div>
 
 <script src="config.js"></script>
-<script src="app.js?v=20260913i"></script>
+<script src="app.js?v=20260913j"></script>
 </body>
 </html>
