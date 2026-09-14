@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260913o">
+<link rel="stylesheet" href="vendor/tailwind-output.css?v=20260913p">
 <script defer src="vendor/alpine.min.js"></script>
 <script src="vendor/supabase.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
@@ -645,15 +645,50 @@
       <!-- Facturación previa a usar la app: se suma a los últimos 12 meses del tracker,
            decayendo con el tiempo (ver monotributoPreviaVigente en app.js) — para no
            subestimar a alguien que empieza a mitad de año fiscal. -->
-      <div x-show="perfil?.es_monotributista && monotributoCategorias.length > 0" x-cloak
+      <div id="facturacion-previa-seccion" x-show="perfil?.es_monotributista && monotributoCategorias.length > 0" x-cloak
         class="mt-5 pt-5 border-t border-slate-100">
-        <label for="facturacion-previa-monto" class="block text-sm font-medium text-slate-900 mb-1">
-          Facturación antes de usar la app
-        </label>
-        <p class="text-xs text-slate-500 mb-2">
-          Si ya facturabas antes de empezar a cargar acá, declarala para que el cálculo de arriba no la subestime.
-          Se va a ir descontando sola con el tiempo, a medida que cargues movimientos reales.
+        <span class="flex items-center gap-1 mb-1">
+          <label for="facturacion-previa-monto" class="text-sm font-medium text-slate-900">
+            Facturación antes de usar la app
+          </label>
+          <span class="relative inline-flex" x-data="{ ayudaAbierta: false }">
+            <button type="button" @click.stop="ayudaAbierta = !ayudaAbierta" @mouseenter="!esMobile && (ayudaAbierta = true)"
+              :aria-expanded="ayudaAbierta" aria-label="Ayuda sobre facturación previa"
+              class="w-5 h-5 rounded-full flex items-center justify-center text-slate-300 hover:bg-slate-100 hover:text-slate-500 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9.5"/>
+                <path d="M9.1 9a3 3 0 0 1 5.75 1.1c0 1.9-2.85 2.85-2.85 2.85"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </button>
+            <div x-show="ayudaAbierta" x-cloak x-transition.opacity.duration.150ms @click.outside="ayudaAbierta = false"
+              class="absolute z-30 top-full left-1/2 -translate-x-1/2 mt-2 w-64 max-w-[85vw] rounded-xl bg-slate-900 text-white text-xs leading-relaxed p-3 pr-8 shadow-[0_4px_16px_rgba(15,23,42,0.25)]">
+              La fecha es hasta cuándo corresponde ese monto. Se descuenta de forma pareja a lo largo de los 12 meses
+              siguientes a esa fecha — no depende de si cargás movimientos o no, es solo el paso del tiempo.
+              <button type="button" @click="ayudaAbierta = false" aria-label="Cerrar ayuda"
+                class="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-slate-400 hover:bg-white/10 hover:text-white transition">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+          </span>
+        </span>
+
+        <!-- Estado actual, para no confundir "formulario vacío" con "ya tenés algo declarado" -->
+        <p x-show="perfil?.facturacion_previa && !monotributoPreviaVencida" x-cloak class="text-xs text-slate-500 mb-2">
+          Declaraste $<span x-text="formatMonto(perfil?.facturacion_previa)"></span> con fecha
+          <span x-text="perfil?.facturacion_previa_fecha"></span> — termina de descontarse el
+          <span class="font-semibold" x-text="monotributoPreviaFechaFin"></span>.
         </p>
+        <p x-show="monotributoPreviaVencida" x-cloak class="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-2">
+          Ya se terminó de descontar la facturación previa que habías declarado. Si seguís facturando fuera de la app, actualizala.
+        </p>
+        <p x-show="!perfil?.facturacion_previa" x-cloak class="text-xs text-slate-500 mb-2">
+          Si ya facturabas antes de empezar a cargar acá, declarala para que el cálculo de arriba no la subestime.
+        </p>
+
         <div class="flex gap-2 mb-2">
           <div class="flex-1">
             <label for="facturacion-previa-monto" class="sr-only">Monto facturado</label>
@@ -661,14 +696,15 @@
               @input="facturacionPreviaMonto = soloNumeros(facturacionPreviaMonto)" placeholder="Monto"
               class="w-full h-11 px-3 rounded-xl border border-[#8594aa] text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
           </div>
-          <div class="flex-1">
-            <label for="facturacion-previa-fecha" class="sr-only">Hasta qué fecha</label>
+          <div class="w-2/5 shrink-0">
+            <label for="facturacion-previa-fecha" class="sr-only">Hasta qué fecha corresponde ese monto</label>
             <input id="facturacion-previa-fecha" type="date" x-model="facturacionPreviaFecha"
               class="w-full h-11 px-3 rounded-xl border border-[#8594aa] text-base focus:outline-none focus:ring-2 focus:ring-slate-400">
           </div>
         </div>
+        <p x-show="errorFacturacionPrevia" x-text="errorFacturacionPrevia" x-cloak class="text-rose-600 text-xs mb-2"></p>
         <button @click="setFacturacionPrevia()" :disabled="!facturacionPreviaMonto || !facturacionPreviaFecha"
-          class="w-full h-11 rounded-xl bg-slate-900 text-white text-sm font-semibold disabled:opacity-40">
+          class="w-full h-11 rounded-xl bg-slate-900 text-white text-sm font-semibold disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-400">
           Guardar
         </button>
       </div>
@@ -1210,10 +1246,23 @@
               Facturaste $<span x-text="formatMonto(monotributoFacturado12m)"></span> en los últimos 12 meses,
               de un tope de $<span x-text="formatMonto(monotributoCategoriaActual.tope_anual)"></span> para tu categoría.
             </p>
-            <p x-show="monotributoPreviaVigente() > 0" x-cloak class="text-xs text-slate-400 mb-2">
-              Incluye $<span x-text="formatMonto(monotributoPreviaVigente())"></span> de tu facturación previa declarada
-              (se va descontando sola con el tiempo).
-            </p>
+            <button x-show="monotributoPreviaVigente() > 0 && monotributoPreviaDiasRestantes() > 30" x-cloak
+              @click="abrirPreferenciasFacturacionPrevia()"
+              class="block text-left text-xs text-slate-400 underline mb-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 rounded">
+              Incluye $<span x-text="formatMonto(monotributoPreviaVigente())"></span> de tu facturación previa
+              declarada (estimación, termina de descontarse el <span x-text="monotributoPreviaFechaFin"></span>).
+            </button>
+            <button x-show="monotributoPreviaVigente() > 0 && monotributoPreviaDiasRestantes() <= 30" x-cloak
+              @click="abrirPreferenciasFacturacionPrevia()"
+              class="block w-full text-left text-xs text-amber-800 bg-amber-50 rounded-lg px-3 py-2 mb-2 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+              Incluye $<span x-text="formatMonto(monotributoPreviaVigente())"></span> de facturación previa —
+              termina de descontarse en <span x-text="monotributoPreviaDiasRestantes()"></span> días.
+            </button>
+            <button x-show="monotributoPreviaVencida" x-cloak
+              @click="abrirPreferenciasFacturacionPrevia()"
+              class="block w-full text-left text-xs text-slate-500 bg-slate-50 rounded-lg px-3 py-2 mb-2 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">
+              Ya se terminó de descontar tu facturación previa declarada. Si seguís facturando fuera de la app, actualizala.
+            </button>
             <!-- Lo que importa no es el % suelto, sino de cara a qué fecha te evalúa ARCA -->
             <div class="rounded-lg bg-slate-50 px-3 py-2 flex items-center gap-2">
               <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1443,6 +1492,6 @@
 </div>
 
 <script src="config.js"></script>
-<script src="app.js?v=20260913j"></script>
+<script src="app.js?v=20260913k"></script>
 </body>
 </html>

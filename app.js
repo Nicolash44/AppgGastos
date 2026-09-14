@@ -212,6 +212,7 @@ function gastosApp() {
     mostrarOnboardingMonotributista: false, // pregunta única en el primer login
     facturacionPreviaMonto: "",
     facturacionPreviaFecha: "",
+    errorFacturacionPrevia: "",
     monotributoCategorias: [], // topes por categoría, cargados a mano por el admin en Supabase
     monotributoFacturado12m: 0,
     movimientos: [],
@@ -891,10 +892,34 @@ function gastosApp() {
     // entonces la ventana móvil quedó completamente cubierta por datos reales.
     monotributoPreviaVigente() {
       if (!this.perfil?.facturacion_previa || !this.perfil?.facturacion_previa_fecha) return 0;
+      const dias = this.monotributoPreviaDiasRestantes();
+      if (dias === null || dias <= 0) return 0;
+      return this.perfil.facturacion_previa * (dias / 365);
+    },
+    // Días que le quedan de vigencia (positivo) o ya pasados (negativo/0) desde que se
+    // declaró. Separado de monotributoPreviaVigente() para poder avisar ANTES de que
+    // llegue a $0, no solo mostrar/ocultar la línea en el momento exacto del cambio.
+    monotributoPreviaDiasRestantes() {
+      if (!this.perfil?.facturacion_previa_fecha) return null;
       const fecha = new Date(this.perfil.facturacion_previa_fecha + "T00:00:00");
       const diasTranscurridos = Math.floor((new Date() - fecha) / (1000 * 60 * 60 * 24));
-      if (diasTranscurridos >= 365 || diasTranscurridos < 0) return 0;
-      return this.perfil.facturacion_previa * ((365 - diasTranscurridos) / 365);
+      if (diasTranscurridos < 0) return 365; // fecha cargada a futuro por error, tratar como recién declarada
+      return 365 - diasTranscurridos;
+    },
+    // Se declaró algo pero ya venció (llegó a $0) — a diferencia de "nunca declaró
+    // nada", acá sí hay algo para reconocer explícitamente en vez de desaparecer mudo.
+    get monotributoPreviaVencida() {
+      if (!this.perfil?.facturacion_previa) return false;
+      const dias = this.monotributoPreviaDiasRestantes();
+      return dias !== null && dias <= 0;
+    },
+    // Fecha exacta en la que termina de descontarse (declarada + 365 días), para
+    // poder decirla en vez de dejar el mecanismo como una caja negra.
+    get monotributoPreviaFechaFin() {
+      if (!this.perfil?.facturacion_previa_fecha) return null;
+      const fecha = new Date(this.perfil.facturacion_previa_fecha + "T00:00:00");
+      fecha.setDate(fecha.getDate() + 365);
+      return fecha.toLocaleDateString("es-AR", { day: "numeric", month: "long", year: "numeric" });
     },
 
     async cargarEvolucion() {
@@ -961,6 +986,14 @@ function gastosApp() {
       this.mostrarPreferencias = true;
       this.facturacionPreviaMonto = this.perfil?.facturacion_previa ? String(this.perfil.facturacion_previa) : "";
       this.facturacionPreviaFecha = this.perfil?.facturacion_previa_fecha || "";
+      this.errorFacturacionPrevia = "";
+    },
+
+    abrirPreferenciasFacturacionPrevia() {
+      this.abrirPreferencias();
+      this.$nextTick(() => {
+        document.getElementById("facturacion-previa-seccion")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
     },
 
     async setCategoriaMonotributo(categoria) {
@@ -969,8 +1002,17 @@ function gastosApp() {
     },
 
     async setFacturacionPrevia() {
+      this.errorFacturacionPrevia = "";
       const monto = parseFloat(this.facturacionPreviaMonto);
       if (!monto || monto <= 0 || !this.facturacionPreviaFecha) return;
+      if (monto > 500000000) {
+        this.errorFacturacionPrevia = "Ese monto parece demasiado alto, revisalo.";
+        return;
+      }
+      if (this.facturacionPreviaFecha > new Date().toISOString().slice(0, 10)) {
+        this.errorFacturacionPrevia = "La fecha no puede ser futura.";
+        return;
+      }
       const { error } = await supabaseClient.rpc("set_facturacion_previa", {
         p_monto: monto,
         p_fecha: this.facturacionPreviaFecha,
