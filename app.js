@@ -291,6 +291,13 @@ function gastosApp() {
       const dias = Math.ceil((proxima - hoy) / (1000 * 60 * 60 * 24));
       return { fecha: proxima, dias };
     },
+    // Si el usuario cargó su categoría real de AFIP y no coincide con la que le
+    // correspondería según lo facturado, hay que avisarle — es el caso que más importa
+    // (subfacturado en el sistema propio de AFIP respecto a lo que realmente factura).
+    get monotributoDesajustada() {
+      if (!this.perfil?.categoria_monotributo || !this.monotributoCategoriaActual) return false;
+      return this.perfil.categoria_monotributo !== this.monotributoCategoriaActual.categoria;
+    },
     get categoriasVisibles() {
       return this.mostrarTodasCategorias ? this.categoriasOrdenadas : this.categoriasOrdenadas.slice(0, 8);
     },
@@ -484,7 +491,7 @@ function gastosApp() {
     async cargarPerfil() {
       const { data, error } = await supabaseClient
         .from("perfiles")
-        .select("trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id, codigo_referido, es_monotributista, monotributista_preguntado")
+        .select("trial_inicio, pagado_hasta, pago_solicitado, mp_preapproval_id, codigo_referido, es_monotributista, monotributista_preguntado, categoria_monotributo")
         .single();
       if (!error) this.perfil = data;
     },
@@ -931,6 +938,11 @@ function gastosApp() {
         this.spotlightCuentas = true;
         await this.cargarMonotributoCategorias();
       }
+    },
+
+    async setCategoriaMonotributo(categoria) {
+      const { error } = await supabaseClient.rpc("set_categoria_monotributo", { p_categoria: categoria || null });
+      if (!error) this.perfil = { ...this.perfil, categoria_monotributo: categoria || null };
     },
 
     // Activa/desactiva la separación laburo/personal (feature gateada: solo la ven quienes
