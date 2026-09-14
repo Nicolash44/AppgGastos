@@ -276,6 +276,21 @@ function gastosApp() {
       if (!cat || cat.tope_anual <= 0) return 0;
       return Math.min(100, Math.round((this.monotributoFacturado12m / cat.tope_anual) * 100));
     },
+    // ARCA recategoriza dos veces al año, 1° de enero y 1° de julio, mirando los 12
+    // meses móviles hasta esa fecha — el número de arriba solo importa de cara a esa
+    // próxima fecha, no como dato suelto.
+    get monotributoProximaRecategorizacion() {
+      const hoy = new Date();
+      const anio = hoy.getFullYear();
+      const candidatas = [
+        new Date(anio, 0, 1),
+        new Date(anio, 6, 1),
+        new Date(anio + 1, 0, 1)
+      ];
+      const proxima = candidatas.find(d => d > hoy);
+      const dias = Math.ceil((proxima - hoy) / (1000 * 60 * 60 * 24));
+      return { fecha: proxima, dias };
+    },
     get categoriasVisibles() {
       return this.mostrarTodasCategorias ? this.categoriasOrdenadas : this.categoriasOrdenadas.slice(0, 8);
     },
