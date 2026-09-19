@@ -6,6 +6,27 @@ estático (HTML + Alpine.js + Tailwind) sobre
 Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio propio
 `ingresos247.com`.
 
+## Comandos de desarrollo
+
+No hay build/lint/test — es HTML+JS estático servido tal cual. Los únicos comandos que
+se usan en este repo:
+
+- **Ver el sitio en local**: `npx serve .` (el login/registro falla en local si el
+  dominio no está en "Redirect URLs" de Supabase; para probar auth completo, mejor
+  contra el sitio ya desplegado).
+- **Regenerar `vendor/tailwind-output.css`** después de agregar/cambiar clases de
+  Tailwind en `index.html`/`app.js` (el CSS es precompilado, no JIT — una clase nueva
+  no aparece hasta regenerar):
+  ```
+  npx tailwindcss@3 -i tailwind-input.css -o vendor/tailwind-output.css --minify
+  ```
+  Después, bumpear el query string de cache-busting en el `<link>` de
+  `vendor/tailwind-output.css` y en el `<script>` de `app.js` en `index.html` (si
+  `app.js` también cambió), para que el navegador no sirva la versión vieja cacheada.
+- **Deploy**: `git push` a `main` — GitHub Pages lo publica solo en `ingresos247.com`.
+  Ver el resto de las migraciones/Edge Functions más abajo — nada de eso se despliega
+  con este push, cada una se aplica a mano en el dashboard de Supabase.
+
 ## Stack
 
 - **Frontend**: `index.html` + `app.js`, sin build step. Alpine.js para reactividad,
