@@ -1486,7 +1486,7 @@
     x-transition:leave-end="opacity-0 translate-y-2"
     class="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900 text-white text-sm rounded-xl shadow-lg px-4 py-3 flex items-center gap-3 max-w-[calc(100%-2rem)]">
     <span x-text="toast && toast.msg"></span>
-    <button x-show="toast && toast.onDeshacer" x-cloak @click="deshacerToast()" class="text-emerald-400 font-semibold underline shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded">Deshacer</button>
+    <button x-show="!!(toast && toast.onDeshacer)" x-cloak @click="deshacerToast()" class="text-emerald-400 font-semibold underline shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 rounded">Deshacer</button>
   </div>
 
 </div>
