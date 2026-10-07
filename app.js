@@ -214,6 +214,7 @@ function gastosApp() {
     facturacionPreviaFecha: "",
     notificacionesActivas: false, // si este dispositivo tiene suscripción de push guardada
     notificacionesError: "",
+    mostrarPromptNotificaciones: false, // banner de "activar recordatorio" la primera vez que entra
     errorFacturacionPrevia: "",
     monotributoCategorias: [], // topes por categoría, cargados a mano por el admin en Supabase
     monotributoFacturado12m: 0,
@@ -463,6 +464,7 @@ function gastosApp() {
       await this.cargarComparacion();
       await this.cargarMonotributoCategorias();
       this.cargarEstadoNotificaciones();
+      this.evaluarPromptNotificaciones();
 
       // Para que el ícono de notificaciones tenga el número al toque, sin
       // tener que abrir el panel de admin primero.
@@ -996,6 +998,29 @@ function gastosApp() {
       const registro = await navigator.serviceWorker.ready;
       const sub = await registro.pushManager.getSubscription();
       this.notificacionesActivas = !!sub;
+    },
+
+    // Banner de "activar recordatorio" la primera vez que entra a la app en este
+    // dispositivo. Solo se muestra si el navegador nunca preguntó (permission
+    // "default") y el usuario no lo descartó antes acá — nunca se auto-pide el
+    // permiso sin un click real, porque Notification.requestPermission() sin gesto
+    // del usuario lo bloquean varios navegadores.
+    evaluarPromptNotificaciones() {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      if (Notification.permission !== "default") return;
+      if (localStorage.getItem("notif_prompt_visto")) return;
+      this.mostrarPromptNotificaciones = true;
+    },
+
+    async aceptarPromptNotificaciones() {
+      localStorage.setItem("notif_prompt_visto", "1");
+      this.mostrarPromptNotificaciones = false;
+      await this.activarNotificaciones();
+    },
+
+    descartarPromptNotificaciones() {
+      localStorage.setItem("notif_prompt_visto", "1");
+      this.mostrarPromptNotificaciones = false;
     },
 
     urlBase64ToUint8Array(base64String) {
