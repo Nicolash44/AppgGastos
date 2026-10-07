@@ -81,17 +81,24 @@ se usan en este repo:
   CUIT/DNI ni nombre del comprador antes de pagar — esos campos van a AFIP como "NR"
   (No Requerido) al facturar. No hay ningún paso ni formulario de datos personales en
   el flujo de pago por este motivo.
-- **Códigos de referido / comisiones de vendedores** (`010_referidos.sql`): lista fija
-  en `public.vendedores` (codigo, nombre, activo), la administrás vos a mano desde el
-  Table Editor de Supabase — no hay panel para crearlos desde la app. Un link tipo
-  `ingresos247.com/?ref=CODIGO` precarga el código; `app.js` lo guarda en
-  `localStorage` (`ref_pendiente`) para no perderlo si el registro termina siendo con
-  Google. Con email/contraseña se manda como metadata del `signUp` y el trigger
-  `crear_perfil_nuevo_usuario` lo graba en `perfiles.codigo_referido` al crear el
-  perfil; con Google (no soporta metadata custom en `signInWithOAuth`) hay un respaldo:
-  ya logueado, `asignarReferidoPendiente()` llama a la función
-  `registrar_codigo_referido()`. Queda fijo para siempre una vez asignado — no se puede
-  pisar después. Cada vez que se acredita un pago (primero o renovación, por Mercado
+- **Códigos de referido / comisiones de vendedores** (`010_referidos.sql`,
+  `024_admin_asignar_referido.sql`): lista fija en `public.vendedores` (codigo,
+  nombre, activo), la administrás vos a mano desde el Table Editor de Supabase — no
+  hay panel para crearlos desde la app. **Ya no existe el link `?ref=CODIGO`** (se
+  sacó a propósito — ver `guardarRefDeUrl` en el historial de `app.js` si hace falta
+  reinstalarlo) — ahora hay dos caminos para asignar el código a un usuario, los dos
+  vía `registrar_codigo_referido()` (queda fijo para siempre una vez asignado, no se
+  puede pisar después, solo acepta códigos de `vendedores` activos):
+  1. El cliente lo tipea a mano en la pantalla de pago ("¿Alguien te recomendó?
+     Ingresá su código", en `aplicarCodigoReferido()`), visible solo si todavía no
+     tiene uno asignado.
+  2. Vos como admin lo asignás o corregís en cualquier momento desde el panel Admin
+     (campo + "Guardar" por usuario), vía `admin_asignar_referido()` — a diferencia
+     del camino anterior, esta función no tiene el límite de "una sola vez": sirve
+     para el caso de alguien que ya tenía cuenta sin referido y un vendedor lo
+     convenció de pagar después.
+
+  Cada vez que se acredita un pago (primero o renovación, por Mercado
   Pago o transferencia) de alguien con código asignado, se inserta una fila en
   `public.pagos_referidos` — desde `mp-webhook`, desde la acción "confirmar" de
   `mp-suscripcion`, y desde `confirmar_pago()` (transferencia). Un Database Webhook en
