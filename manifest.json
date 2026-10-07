@@ -16,5 +16,10 @@
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "categories": ["finance", "productivity"],
+  "screenshots": [
+    { "src": "screenshots/mobile-dashboard.png", "sizes": "824x1830", "type": "image/png", "form_factor": "narrow", "label": "Dashboard de Ingresos247 en el celular" },
+    { "src": "screenshots/desktop-dashboard.png", "sizes": "2560x1800", "type": "image/png", "form_factor": "wide", "label": "Dashboard de Ingresos247 en pantalla ancha" }
   ]
 }
