@@ -29,8 +29,12 @@ $$;
 grant execute on function public.admin_asignar_referido(uuid, text) to authenticated;
 
 -- admin_listar_usuarios ahora también devuelve el código de referido actual, para
--- mostrarlo/editarlo en el panel sin pegarle a la tabla perfiles directo.
-create or replace function public.admin_listar_usuarios()
+-- mostrarlo/editarlo en el panel sin pegarle a la tabla perfiles directo. Postgres no
+-- deja cambiar el tipo de retorno de una función con CREATE OR REPLACE (las columnas
+-- de un "returns table" cuentan como tipo) — hay que dropearla primero.
+drop function if exists public.admin_listar_usuarios();
+
+create function public.admin_listar_usuarios()
 returns table (
   user_id uuid,
   email text,
