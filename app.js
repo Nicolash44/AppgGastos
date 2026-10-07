@@ -769,6 +769,17 @@ function gastosApp() {
       if (!error) this.cargarUsuariosAdmin();
     },
 
+    // A diferencia del registro (donde el código solo entra por el link ?ref= y queda
+    // fijo para siempre), esto deja asignar o corregir el referido de cualquier usuario
+    // en cualquier momento — para el caso de alguien que ya tenía cuenta sin referido y
+    // un vendedor lo convenció de pagar después.
+    async asignarReferidoAdmin(u) {
+      const codigo = (u.codigo_referido || "").trim().toUpperCase() || null;
+      const { error } = await supabaseClient.rpc("admin_asignar_referido", { p_user_id: u.user_id, p_codigo: codigo });
+      if (error) alert("No se pudo asignar: " + error.message);
+      else u.codigo_referido = codigo;
+    },
+
     // ==================== CATEGORÍAS ====================
 
     async cargarCategorias() {

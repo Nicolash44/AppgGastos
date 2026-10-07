@@ -833,6 +833,12 @@
               <div class="font-medium text-slate-900 text-sm truncate" x-text="u.email"></div>
               <div class="text-xs text-slate-500" x-text="estadoUsuario(u)"></div>
               <div class="text-xs text-amber-700" x-show="u.pago_solicitado">Avisó que transfirió</div>
+              <div class="flex items-center gap-1.5 mt-1.5">
+                <label :for="'ref-' + u.user_id" class="sr-only">Código de referido</label>
+                <input :id="'ref-' + u.user_id" type="text" x-model="u.codigo_referido" placeholder="Sin referido"
+                  class="w-28 h-7 px-2 rounded-md border border-[#8594aa] text-xs uppercase focus:outline-none focus:ring-2 focus:ring-slate-400">
+                <button @click="asignarReferidoAdmin(u)" class="shrink-0 px-2 h-7 rounded-md bg-slate-100 text-slate-600 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Guardar</button>
+              </div>
             </div>
             <div class="flex gap-2 shrink-0">
               <button @click="confirmarPagoAdmin(u.user_id)" class="px-3 h-9 rounded-lg bg-emerald-700 text-white text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Confirmar pago</button>
@@ -1581,7 +1587,7 @@
 </div>
 
 <script src="config.js"></script>
-<script src="app.js?v=20261007c"></script>
+<script src="app.js?v=20261007d"></script>
 <script>
   // Requisito de instalabilidad PWA (y de TWA/Play Store) — ver sw.js para qué cachea.
   if ("serviceWorker" in navigator) {
