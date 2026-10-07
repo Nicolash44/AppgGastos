@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.ingresos247.twa",
+    "sha256_cert_fingerprints": ["1D:A1:DF:7B:26:DC:33:E1:4F:4B:AB:B0:76:F1:68:64:33:0C:51:9B:DD:1B:D4:F2:87:91:29:B6:D8:B3:A7:FB"]
+  }
+}]
