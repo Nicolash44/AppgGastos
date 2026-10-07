@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="vendor/tailwind-output.css?v=20261007a">
+<link rel="stylesheet" href="vendor/tailwind-output.css?v=20261007c">
 <script defer src="vendor/alpine.min.js"></script>
 <script src="vendor/supabase.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
@@ -755,6 +755,42 @@
 
   <!-- Contenido normal de la app -->
   <div x-show="!bloqueado && !cargandoInicial">
+
+  <!-- Banner de "instalar la app" en el celu (ver evaluarPromptInstalar en app.js).
+       Android/Chrome dispara el diálogo nativo con beforeinstallprompt; iOS Safari
+       no tiene esa API, así que en vez de eso explica el paso manual. -->
+  <div x-show="mostrarPromptInstalar" x-cloak class="max-w-md md:max-w-5xl mx-auto px-4 pt-4">
+    <div class="rounded-xl bg-slate-50 border border-slate-200 p-4 flex items-start gap-3">
+      <div class="w-9 h-9 rounded-full bg-white border border-slate-200 flex items-center justify-center shrink-0">
+        <svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="5" y="2" width="14" height="20" rx="2.5"/>
+          <line x1="11" y1="18" x2="13" y2="18"/>
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-slate-900">Instalá Ingresos247 en tu celu</p>
+        <p class="text-xs text-slate-500 mt-0.5">Te queda como un ícono más, igual que cualquier app — entrás directo, sin buscar el link.</p>
+        <div class="flex gap-2 mt-3">
+          <button @click="instalarApp()" class="h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-emerald-500">Instalar</button>
+          <button @click="descartarPromptInstalar()" class="h-9 px-4 rounded-lg text-slate-500 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-400">Ahora no</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instrucciones manuales para iOS Safari, que no tiene diálogo nativo de instalar. -->
+  <div x-show="mostrarInstruccionesIOS" x-cloak class="fixed inset-0 bg-black/40 z-40 flex items-end md:items-center justify-center p-4"
+    @click.self="mostrarInstruccionesIOS = false">
+    <div class="w-full max-w-sm bg-white rounded-2xl p-5">
+      <p class="text-sm font-medium text-slate-900 mb-3">Para instalarla en iPhone:</p>
+      <ol class="text-sm text-slate-600 space-y-2 list-decimal list-inside">
+        <li>Tocá el botón <strong>Compartir</strong> (el cuadrado con la flecha hacia arriba) abajo del navegador.</li>
+        <li>Elegí <strong>"Agregar a inicio"</strong>.</li>
+        <li>Confirmá tocando <strong>"Agregar"</strong> arriba a la derecha.</li>
+      </ol>
+      <button @click="mostrarInstruccionesIOS = false" class="w-full h-10 mt-4 rounded-lg bg-slate-900 text-white text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-slate-400">Entendido</button>
+    </div>
+  </div>
 
   <!-- Banner de "activar recordatorio" la primera vez que entra a la app en este
        dispositivo (ver evaluarPromptNotificaciones en app.js). -->
@@ -1545,7 +1581,7 @@
 </div>
 
 <script src="config.js"></script>
-<script src="app.js?v=20261007a"></script>
+<script src="app.js?v=20261007c"></script>
 <script>
   // Requisito de instalabilidad PWA (y de TWA/Play Store) — ver sw.js para qué cachea.
   if ("serviceWorker" in navigator) {

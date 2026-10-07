@@ -250,6 +250,15 @@ function gastosApp() {
     // --- layout / dispositivo ---
     esMobile: window.matchMedia("(max-width: 767px)").matches,
 
+    // Banner de "instalar como app" en el celu. _deferredInstallPrompt guarda el
+    // evento beforeinstallprompt (Android/Chrome) para poder dispararlo recién
+    // cuando el usuario toca "Instalar" — los navegadores lo exigen así, no se
+    // puede mostrar el diálogo nativo solo al cargar la página.
+    _deferredInstallPrompt: null,
+    mostrarPromptInstalar: false,
+    esIOS: /iphone|ipad|ipod/i.test(navigator.userAgent),
+    mostrarInstruccionesIOS: false,
+
     get categoriasActuales() {
       return this.categorias[this.tipo];
     },
@@ -376,6 +385,50 @@ function gastosApp() {
       window.matchMedia("(max-width: 767px)").addEventListener("change", (e) => {
         this.esMobile = e.matches;
       });
+
+      this.evaluarPromptInstalar();
+    },
+
+    // Ya instalada (abierta como app, no como pestaña del navegador) si corre en
+    // modo standalone — tanto el estándar (display-mode) como el de iOS Safari
+    // (navigator.standalone), que no soporta el primero.
+    yaInstalada() {
+      return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    },
+
+    evaluarPromptInstalar() {
+      if (!this.esMobile || this.yaInstalada() || localStorage.getItem("instalar_prompt_visto")) return;
+
+      if (this.esIOS) {
+        // Safari/iOS no dispara beforeinstallprompt — no hay API para instalar
+        // desde JS, solo se puede explicar el paso manual (Compartir → Agregar a
+        // inicio).
+        this.mostrarPromptInstalar = true;
+        return;
+      }
+
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        this._deferredInstallPrompt = e;
+        this.mostrarPromptInstalar = true;
+      });
+    },
+
+    async instalarApp() {
+      if (this.esIOS) {
+        this.mostrarInstruccionesIOS = true;
+        return;
+      }
+      this.mostrarPromptInstalar = false;
+      localStorage.setItem("instalar_prompt_visto", "1");
+      if (!this._deferredInstallPrompt) return;
+      this._deferredInstallPrompt.prompt();
+      this._deferredInstallPrompt = null;
+    },
+
+    descartarPromptInstalar() {
+      this.mostrarPromptInstalar = false;
+      localStorage.setItem("instalar_prompt_visto", "1");
     },
 
     arrancarUnaVez() {
