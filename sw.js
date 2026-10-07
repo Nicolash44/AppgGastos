@@ -34,7 +34,7 @@ self.addEventListener("activate", (event) => {
 // Server y cliente se ponen de acuerdo en la forma del payload acá — si cambia uno,
 // cambiar el otro.
 self.addEventListener("push", (event) => {
-  let datos = { title: "Ingresos247", body: "No te olvides de cargar tus gastos e ingresos de hoy.", url: "./index.html" };
+  let datos = { title: "Ingresos247", body: "No te olvides de anotar tus gastos e ingresos de hoy.", url: "./index.html" };
   try {
     if (event.data) datos = { ...datos, ...event.data.json() };
   } catch {

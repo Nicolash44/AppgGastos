@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
 
     const payload = JSON.stringify({
       title: "Ingresos247",
-      body: "No te olvides de cargar tus gastos e ingresos de hoy.",
+      body: "No te olvides de anotar tus gastos e ingresos de hoy.",
       url: "./index.html",
     });
 
