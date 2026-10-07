@@ -212,6 +212,8 @@ function gastosApp() {
     mostrarOnboardingMonotributista: false, // pregunta única en el primer login
     facturacionPreviaMonto: "",
     facturacionPreviaFecha: "",
+    notificacionesActivas: false, // si este dispositivo tiene suscripción de push guardada
+    notificacionesError: "",
     errorFacturacionPrevia: "",
     monotributoCategorias: [], // topes por categoría, cargados a mano por el admin en Supabase
     monotributoFacturado12m: 0,
@@ -460,6 +462,7 @@ function gastosApp() {
       await this.cargarEvolucion();
       await this.cargarComparacion();
       await this.cargarMonotributoCategorias();
+      this.cargarEstadoNotificaciones();
 
       // Para que el ícono de notificaciones tenga el número al toque, sin
       // tener que abrir el panel de admin primero.
@@ -979,6 +982,66 @@ function gastosApp() {
       if (valor) {
         this.spotlightCuentas = true;
         await this.cargarMonotributoCategorias();
+      }
+    },
+
+    // Estado del dispositivo actual: ¿tiene permiso Y una suscripción push activa?
+    // Es por-dispositivo, no por-usuario (en el celu puede estar activo y en la compu no).
+    async cargarEstadoNotificaciones() {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      if (Notification.permission !== "granted") {
+        this.notificacionesActivas = false;
+        return;
+      }
+      const registro = await navigator.serviceWorker.ready;
+      const sub = await registro.pushManager.getSubscription();
+      this.notificacionesActivas = !!sub;
+    },
+
+    urlBase64ToUint8Array(base64String) {
+      const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+      const raw = atob(base64);
+      return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+    },
+
+    async activarNotificaciones() {
+      this.notificacionesError = "";
+      try {
+        const permiso = await Notification.requestPermission();
+        if (permiso !== "granted") {
+          this.notificacionesError = "No diste permiso de notificaciones en el navegador.";
+          return;
+        }
+        const registro = await navigator.serviceWorker.ready;
+        const sub = await registro.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: this.urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+        const json = sub.toJSON();
+        const { error } = await supabaseClient.from("push_subscriptions").upsert(
+          { endpoint: json.endpoint, p256dh: json.keys.p256dh, auth: json.keys.auth },
+          { onConflict: "user_id,endpoint" }
+        );
+        if (error) throw error;
+        this.notificacionesActivas = true;
+      } catch (e) {
+        this.notificacionesError = "No se pudo activar. Intentá de nuevo.";
+      }
+    },
+
+    async desactivarNotificaciones() {
+      this.notificacionesError = "";
+      try {
+        const registro = await navigator.serviceWorker.ready;
+        const sub = await registro.pushManager.getSubscription();
+        if (sub) {
+          await supabaseClient.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+          await sub.unsubscribe();
+        }
+        this.notificacionesActivas = false;
+      } catch (e) {
+        this.notificacionesError = "No se pudo desactivar. Intentá de nuevo.";
       }
     },
 

@@ -30,6 +30,38 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
+// Recordatorio diario por Web Push (ver supabase/functions/enviar-recordatorio-diario).
+// Server y cliente se ponen de acuerdo en la forma del payload acá — si cambia uno,
+// cambiar el otro.
+self.addEventListener("push", (event) => {
+  let datos = { title: "Ingresos247", body: "No te olvides de cargar tus gastos e ingresos de hoy.", url: "./index.html" };
+  try {
+    if (event.data) datos = { ...datos, ...event.data.json() };
+  } catch {
+    // si no vino como JSON, se usa el default de arriba
+  }
+  event.waitUntil(
+    self.registration.showNotification(datos.title, {
+      body: datos.body,
+      icon: "icons/icon-192.png",
+      badge: "icons/icon-192.png",
+      data: { url: datos.url },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || "./index.html";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientes) => {
+      const existente = clientes.find((c) => c.url.includes(self.location.origin));
+      if (existente) return existente.focus();
+      return self.clients.openWindow(url);
+    })
+  );
+});
+
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   // Solo intercepta pedidos al propio sitio (mismo origin) y solo GET — todo lo demás

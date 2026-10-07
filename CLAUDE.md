@@ -316,6 +316,34 @@ se usan en este repo:
   Es una aproximación (asume que la facturación previa se distribuyó parejo en esos 12
   meses), no un cálculo exacto — se lo aclara en el widget cuando está sumando algo.
 
+## Recordatorio diario (Web Push)
+
+- `public.push_subscriptions` (`022_push_subscriptions.sql`): una fila por
+  dispositivo/navegador suscripto (un usuario puede tener varias — celu y compu por
+  separado). A diferencia del resto de las tablas de este proyecto, **sí tiene
+  policies de insert/delete directas para el cliente** (no hace falta una función
+  security definer acá — el endpoint/claves de push no son sensibles ni tocan plata).
+- Activar/desactivar vive en Preferencias (`notificacionesActivas` en `app.js`, toggle
+  visible para cualquier usuario, no solo monotributistas). Es **por dispositivo**:
+  activarlo en el celu no lo activa en la compu.
+- `sw.js` tiene los handlers `push` (muestra la notificación) y `notificationclick`
+  (enfoca la pestaña si ya está abierta, si no abre una). El payload que manda el
+  servidor y lo que lee el service worker tienen que coincidir en forma — si se
+  cambia uno, cambiar el otro.
+- `supabase/functions/enviar-recordatorio-diario/`: función interna (gateada por
+  `x-internal-secret` contra `RECORDATORIO_SECRET`, mismo patrón que `facturar`), usa
+  `npm:web-push` para mandar el push real a cada suscripción vía el protocolo VAPID.
+  Si una suscripción devuelve 404/410 (el navegador la invalidó — desinstalación,
+  limpieza de datos, etc.) se borra sola, no se reintenta.
+- `023_cron_recordatorio_diario.sql`: cron diario a las 23:00 UTC = 20:00 Argentina
+  (sin ajuste por horario de verano, Argentina no lo tiene desde 2009). Mismo patrón
+  de secreto-hardcodeado-como-placeholder que `013_cron_reintentar_facturas.sql` —
+  reemplazar `<RECORDATORIO_SECRET>` por el valor real solo al pegarlo en el SQL Editor.
+- Secretos de Edge Function nuevos: `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` (el par
+  generado una sola vez con `web-push generateVAPIDKeys()`) y `RECORDATORIO_SECRET`.
+  La clave pública también vive en `config.js` (es pública a propósito, la privada
+  nunca sale de los secretos de Edge Function).
+
 ## Convenciones de este proyecto
 
 - Todo el copy de cara al usuario está en español rioplatense informal ("vos", no "tú").
