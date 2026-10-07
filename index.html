@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="vendor/tailwind-output.css?v=20261007c">
+<link rel="stylesheet" href="vendor/tailwind-output.css?v=20261007e">
 <script defer src="vendor/alpine.min.js"></script>
 <script src="vendor/supabase.min.js"></script>
 <script src="vendor/chart.umd.min.js"></script>
@@ -533,6 +533,26 @@
 
       <template x-if="perfil && !perfil.mp_preapproval_id">
         <div>
+          <!-- Opcional: si entró sin el link ?ref=CODIGO (ej. alguien le pasó el código
+               de palabra), puede cargarlo acá antes de pagar. Una vez aplicado queda
+               fijo (misma función que usa el respaldo de Google, registrar_codigo_referido),
+               así que solo se muestra mientras todavía no tiene uno asignado. -->
+          <template x-if="perfil && !perfil.codigo_referido">
+            <div class="mb-4">
+              <button type="button" @click="mostrarCodigoReferido = !mostrarCodigoReferido" class="text-xs text-slate-500 underline mb-2">
+                <span x-text="mostrarCodigoReferido ? 'Ocultar' : '¿Alguien te recomendó? Ingresá su código'"></span>
+              </button>
+              <div x-show="mostrarCodigoReferido" x-cloak class="flex gap-2">
+                <label for="codigo-referido-input" class="sr-only">Código de referido</label>
+                <input id="codigo-referido-input" type="text" x-model="codigoReferidoInput" placeholder="CÓDIGO"
+                  class="flex-1 h-10 px-3 rounded-lg border border-[#8594aa] text-sm uppercase focus:outline-none focus:ring-2 focus:ring-slate-400">
+                <button @click="aplicarCodigoReferido()" :disabled="!codigoReferidoInput"
+                  class="shrink-0 px-3 h-10 rounded-lg bg-slate-100 text-slate-600 text-sm font-medium disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Aplicar</button>
+              </div>
+              <p x-show="codigoReferidoMsg" x-text="codigoReferidoMsg" x-cloak class="text-xs mt-1" :class="codigoReferidoError ? 'text-rose-600' : 'text-emerald-700'"></p>
+            </div>
+          </template>
+
           <p class="text-slate-500 text-sm mb-4">Suscribite y pagá con tarjeta ($14.000/mes), se renueva solo cada mes:</p>
 
           <button x-show="!mpInitPoint" @click="suscribirseConMP()" :disabled="procesandoMP"
@@ -1587,7 +1607,7 @@
 </div>
 
 <script src="config.js"></script>
-<script src="app.js?v=20261007d"></script>
+<script src="app.js?v=20261007e"></script>
 <script>
   // Requisito de instalabilidad PWA (y de TWA/Play Store) — ver sw.js para qué cachea.
   if ("serviceWorker" in navigator) {

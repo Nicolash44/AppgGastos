@@ -186,6 +186,10 @@ function gastosApp() {
     mostrarPago: false,
     mostrarPreferencias: false,
     mostrarTransferencia: false,
+    mostrarCodigoReferido: false,
+    codigoReferidoInput: "",
+    codigoReferidoMsg: "",
+    codigoReferidoError: false,
     procesandoMP: false,
     mpInitPoint: null,
     confirmandoSuscripcion: false,
@@ -569,6 +573,30 @@ function gastosApp() {
         if (!error) this.perfil = { ...this.perfil, codigo_referido: ref };
       }
       localStorage.removeItem("ref_pendiente");
+    },
+
+    // El cliente lo tipea a mano en la pantalla de pago (ej. alguien le pasó el código
+    // de palabra, no por el link). Misma función/regla que el respaldo de Google: solo
+    // pisa si todavía no tiene uno asignado, y solo si el código existe y está activo.
+    async aplicarCodigoReferido() {
+      const codigo = this.codigoReferidoInput.trim().toUpperCase();
+      if (!codigo) return;
+      this.codigoReferidoError = false;
+      this.codigoReferidoMsg = "";
+      const { error } = await supabaseClient.rpc("registrar_codigo_referido", { p_codigo: codigo });
+      if (error) {
+        this.codigoReferidoError = true;
+        this.codigoReferidoMsg = "No se pudo aplicar ese código.";
+        return;
+      }
+      await this.cargarPerfil();
+      if (this.perfil.codigo_referido === codigo) {
+        this.codigoReferidoMsg = "¡Listo! Código aplicado.";
+        this.mostrarCodigoReferido = false;
+      } else {
+        this.codigoReferidoError = true;
+        this.codigoReferidoMsg = "Ese código no existe o no está activo.";
+      }
     },
 
     async marcarPagoTransferido() {
