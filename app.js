@@ -347,7 +347,7 @@ function gastosApp() {
     get diasRestantesTrial() {
       if (!this.perfil || this.pagoVigente()) return null;
       const vence = new Date(this.perfil.trial_inicio);
-      vence.setDate(vence.getDate() + 5);
+      vence.setDate(vence.getDate() + 15);
       const dias = Math.ceil((vence - new Date()) / (1000 * 60 * 60 * 24));
       return Math.max(0, dias);
     },
@@ -762,7 +762,7 @@ function gastosApp() {
         return `Pago vigente · ${dias} día(s)`;
       }
       const venceTrial = new Date(u.trial_inicio);
-      venceTrial.setDate(venceTrial.getDate() + 5);
+      venceTrial.setDate(venceTrial.getDate() + 15);
       if (venceTrial > ahora) {
         const dias = Math.ceil((venceTrial - ahora) / 86400000);
         return `Trial · ${dias} día(s)`;

@@ -1,7 +1,7 @@
 # Ingresos247
 
 App web de control de gastos e ingresos, vendida como servicio mensual ($14.000 ARS/mes
-por Mercado Pago, $12.000 ARS/mes por transferencia, con 5 días de prueba gratis). Sitio
+por Mercado Pago, $12.000 ARS/mes por transferencia, con 15 días de prueba gratis). Sitio
 estático (HTML + Alpine.js + Tailwind) sobre
 Supabase (auth, base de datos, edge functions). Deploy en GitHub Pages, dominio propio
 `ingresos247.com`.
@@ -67,7 +67,7 @@ se usan en este repo:
 ## Modelo de negocio y cómo funciona el acceso
 
 - Un solo plan, con precio distinto según medio de pago: **$14.000/mes por Mercado Pago,
-  $12.000/mes por transferencia** (más barato porque no paga la comisión de MP). 5 días
+  $12.000/mes por transferencia** (más barato porque no paga la comisión de MP). 15 días
   de prueba gratis al registrarse. El precio de Mercado Pago se fija en el secreto de
   Edge Function `MP_PRECIO_MENSUAL` (default 14000); el de transferencia es solo texto en
   `index.html` (3 lugares) — no hay una única fuente de verdad para ninguno de los dos.
@@ -135,6 +135,12 @@ se usan en este repo:
   admin confirma a mano, `puede_operar()` también deja pasar si `pago_solicitado` tiene
   menos de 24hs, aunque el trial/suscripción ya haya vencido. Se corta sola al llegar las
   24hs si el admin no confirmó, o antes si `confirmar_pago()` ya limpió `pago_solicitado`.
+- El trial pasó de 5 a 15 días (`025_trial_15_dias.sql`, redefine `puede_operar()` con la
+  misma lógica de la gracia de 24hs, cambiando solo el intervalo del trial) — si cambia de
+  nuevo, hay que tocar esa función además de `diasRestantesTrial`/`estadoUsuario()` en
+  `app.js` y los textos sueltos en `index.html`, el system prompt de `soporte/index.ts` y
+  la plantilla `email-templates/confirmacion.html` (esta última no se despliega sola, hay
+  que volver a pegarla en el dashboard de Supabase).
 - Cuando alguien marca "Ya transferí", un Database Webhook en la tabla `perfiles` dispara
   la Edge Function `notificar-pago` (en `supabase/functions/notificar-pago/`), que busca
   el email real del usuario (vía Admin API) y te manda un mail por Resend. Solo notifica

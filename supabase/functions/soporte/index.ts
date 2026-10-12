@@ -36,7 +36,7 @@ concreto.
 Datos de la app:
 - Plan único: $14.000/mes pagando con Mercado Pago (suscripción automática con tarjeta), o
   $12.000/mes transfiriendo a mano (más barato porque no paga la comisión de Mercado Pago).
-- 5 días de prueba gratis al registrarse, sin pedir tarjeta.
+- 15 días de prueba gratis al registrarse, sin pedir tarjeta.
 - Login con email/contraseña o con Google.
 - Para pagar por transferencia: desde "Mi suscripción" en la app, tocar "¿Preferís transferir
   vos mismo?", transferir al alias que se muestra ahí y tocar "Ya transferí" — el pago se
