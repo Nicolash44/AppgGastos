@@ -497,6 +497,16 @@ function gastosApp() {
       const gastos = this.movimientos.filter(m => m.tipo === "gasto").length;
       this.setTipo(ingresos > gastos ? "ingreso" : "gasto");
 
+      // Atajos del ícono de la app instalada (manifest.json "shortcuts") mandan acá
+      // con ?accion=gasto o ?accion=ingreso, para entrar directo al formulario de
+      // carga sin pasar por el dashboard.
+      const accion = new URLSearchParams(window.location.search).get("accion");
+      if (accion === "gasto" || accion === "ingreso") {
+        window.history.replaceState({}, "", window.location.pathname);
+        this.setTipo(accion);
+        this.$nextTick(() => document.getElementById("form-carga")?.scrollIntoView({ behavior: "smooth" }));
+      }
+
       this.cargandoInicial = false;
 
       // Onboarding de "¿sos monotributista?" una sola vez: la feature de separar
